@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { randomDie } from './dice';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,7 @@ export function rollMany(amount: number, d : number, mod?: number) : number{
 export function roll(d: number) : number{
   if(!d)
     return 0;
-  return Math.floor(Math.random() * d) + 1;
+  return randomDie(d);
 }
 
 export function orZero(num: number) : number {

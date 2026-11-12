@@ -1,5 +1,6 @@
 import { CustomizationComponent } from 'src/app/character/customization/customization.component';
 import { downloadJson } from 'src/app/services/character-format';
+import { initializeCurrentHp } from 'src/app/services/hit-points';
 import { BackgroundDetailsComponent } from './../../character/background-details/background-details.component';
 import { EquipmentComponent } from './../../character/equipment/equipment.component';
 import { StartingMagicComponent } from './../../character/starting-magic/starting-magic.component';
@@ -229,10 +230,11 @@ export class CharacterCreationComponent
   }
 
   preview(): void {
+    initializeCurrentHp(this.character);
     this.flushSave();
     if (this.storage.error) return;
     this.storage.setJson('view-character', this.character);
-    this.router.navigate(['/view/responsive']);
+    this.router.navigate(['/view/responsive'], { state: { openCharacterOverview: true } });
   }
 
   download(): void {

@@ -1,0 +1,33 @@
+@mixin dialog($width: 460px) {
+  box-sizing: border-box;
+  width: min($width, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 14px;
+  border: 1px solid var(--sheet-line, #d7c9b4);
+  border-top: 3px solid var(--sheet-bronze, #af8246);
+  border-radius: 10px;
+  background: var(--sheet-paper, #fcfaf5);
+  color: var(--sheet-ink, #2d2a24);
+  box-shadow: 0 12px 36px #162b3150;
+  overflow-wrap: anywhere;
+  &::backdrop { background: rgb(26 42 46 / .48); }
+}
+
+@mixin action {
+  box-sizing: border-box;
+  min-height: 36px;
+  max-width: 100%;
+  padding: 5px 9px;
+  border: 1px solid var(--sheet-line, #d7c9b4);
+  border-radius: 6px;
+  background: var(--sheet-paper, #fcfaf5);
+  color: var(--sheet-accent, #305d69);
+  font: inherit;
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  &:not(:disabled) { cursor: pointer; }
+  &:not(:disabled):hover { background: var(--sheet-sea-wash, #e9f0f1); }
+  &:focus-visible { outline: 2px solid var(--sheet-accent, #305d69); outline-offset: 1px; }
+  @media (max-width: 680px) { min-height: 44px; }
+}

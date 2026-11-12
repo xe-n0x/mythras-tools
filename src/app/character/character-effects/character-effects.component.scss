@@ -1,0 +1,54 @@
+@use '../../styles/sheet-choice' as choice;
+
+:host { display: block; min-width: 0; }
+.choice-dialog { @include choice.dialog; }
+.choice-action { @include choice.action; }
+.effects-panel {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--sheet-line);
+  border-radius: var(--sheet-radius);
+  background: var(--sheet-paper);
+  box-shadow: var(--sheet-shadow);
+}
+header, .effect-actions { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; }
+h3, p { margin: 0; }
+h3 { font-weight: 700; }
+.effects-panel > header h3 {
+  min-width: 0;
+  padding-inline-start: 8px;
+  border-inline-start: 2px solid var(--sheet-bronze);
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+.choice-dialog > header { border-bottom: 1px solid var(--sheet-line); padding-bottom: 8px; }
+button, select, input, textarea { box-sizing: border-box; min-width: 0; max-width: 100%; color: inherit; font: inherit; }
+button { cursor: pointer; }
+.fatigue-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.effect-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.effect-list li { border-top: 1px solid var(--sheet-line); padding: 5px 0; overflow-wrap: anywhere; }
+.effect-list p, .effect-status { color: var(--sheet-muted); font-size: .84rem; }
+.effect-summary { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 6px 0 0; list-style: none; }
+.effect-summary li { max-width: 100%; }
+.effect-summary li:not(.inactive) button { border-inline-start: 3px solid var(--sheet-bronze); background: var(--sheet-bronze-wash); }
+.effect-summary small { display: block; color: var(--sheet-muted); font-weight: 400; }
+.effect-summary .inactive button { color: var(--sheet-muted); }
+.add-effect { margin-top: 7px; }
+.effect-list .positive { color: #28572c; }
+.effect-list .negative { color: #8d2c2c; }
+.effect-actions { justify-content: flex-start; margin-top: 4px; }
+.effect-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr)); gap: 6px; margin-top: 8px; }
+.effect-editor label { display: grid; min-width: 0; gap: 2px; }
+.effect-editor :is(select, input:not([type=checkbox]), textarea) { width: 100%; }
+.effect-editor :is(select, input:not([type=checkbox]), textarea), .fatigue-picker select {
+  min-height: 36px;
+  padding: 4px 6px;
+  border: 1px solid #bcc6c5;
+  border-radius: 6px;
+  background: #fcfdfd;
+}
+.effect-editor textarea { resize: vertical; }
+.effect-editor button { align-self: end; }
+.effect-error { grid-column: 1 / -1; color: #8d2c2c; }
+.effect-editor .stun-confirm { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 6px; }

@@ -1,50 +1,50 @@
 <mat-form-field>
-  <mat-label>Base Material:</mat-label>
+  <mat-label>{{ui("Base Material:", "Группа материалов")}}</mat-label>
   <mat-select
     [value]="equipment.baseMaterial"
     (selectionChange)="changedBaseMaterial($event.value)"
   >
-    <mat-option [value]="undefined">None</mat-option>
-    <mat-option value="Flexible">Flexible</mat-option>
-    <mat-option value="Rigid">Rigid</mat-option>
+    <mat-option [value]="undefined">{{ui("None", "Нет")}}</mat-option>
+    <mat-option value="Flexible">{{ui("Flexible", "Гибкая")}}</mat-option>
+    <mat-option value="Rigid">{{ui("Rigid", "Жёсткая")}}</mat-option>
   </mat-select>
 </mat-form-field>
 <mat-form-field>
-  <mat-label>Material:</mat-label>
+  <mat-label>{{ui("Material:", "Материал")}}</mat-label>
   <mat-select
     [value]="equipment.material"
     (selectionChange)="changedMaterial($event.value)"
   >
-    <mat-option *ngFor="let material of getMaterials()" [value]="material">{{material}}</mat-option>
+    <mat-option *ngFor="let material of getMaterials()" [value]="material">{{label(material)}}</mat-option>
   </mat-select>
 </mat-form-field>
 <mat-form-field>
-  <mat-label>Construction:</mat-label>
+  <mat-label>{{ui("Construction:", "Конструкция")}}</mat-label>
   <mat-select
     [value]="equipment.construction"
     (selectionChange)="changedConstruction($event.value)"
   >
-    <mat-option *ngFor="let construction of getConstructions()" [value]="construction">{{construction}}</mat-option>
+    <mat-option *ngFor="let construction of getConstructions()" [value]="construction">{{label(construction)}}</mat-option>
   </mat-select>
 </mat-form-field>
 <mat-form-field>
-  <mat-label>Type:</mat-label>
+  <mat-label>{{ui("Type:", "Вид брони")}}</mat-label>
   <mat-select
   [(ngModel)]="equipment.type"
   >
-    <mat-option *ngFor="let type of getTypes()" [value]="type">{{type}}</mat-option>
+    <mat-option *ngFor="let type of getTypes()" [value]="type">{{label(type)}}</mat-option>
   </mat-select>
 </mat-form-field>
 <mat-form-field>
-  <mat-label>AP:</mat-label>
+  <mat-label>{{ui("AP:", "Очки брони")}}</mat-label>
   <input type="number" matInput [(ngModel)]="equipment.ap"/>
 </mat-form-field>
 <mat-form-field>
-  <mat-label>ENC:</mat-label>
+  <mat-label>{{ui("ENC:", "Нагрузка")}}</mat-label>
   <input type="number" matInput [(ngModel)]="equipment.enc"/>
 </mat-form-field>
 <mat-form-field>
-  <mat-label>Cost:</mat-label>
+  <mat-label>{{ui("Cost:", "Стоимость")}}</mat-label>
   <input type="number" matInput [(ngModel)]="equipment.cost"/>
 </mat-form-field>
 

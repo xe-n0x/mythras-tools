@@ -5,7 +5,7 @@
   .app-card-surface { box-shadow:0 2px 8px #35234605; border-color:#e2dce7; border-radius:14px; }
   .mat-mdc-button-base { letter-spacing:.25px!important; font-weight:500; border-radius:8px!important; }
   .mat-mdc-unelevated-button, .mat-mdc-raised-button { box-shadow:none!important; }
-  .mat-mdc-outlined-button { border-color:#dcd1e5!important; }
+  .mat-mdc-outlined-button { border-color:var(--screen-outline-color, #dcd1e5)!important; }
   .modal-opener { color:#67439b; text-decoration-color:#c7b4dd; text-underline-offset:3px; }
   .modal-opener:hover { color:#482477; text-decoration-color:currentColor; }
   .page-eyebrow { font-size:11px; letter-spacing:1.6px; font-weight:600; color:#876ba4; text-transform:uppercase; margin:0 0 8px; }
@@ -98,9 +98,6 @@
   app-mythras-to-dnd-monster-block input, app-mythras-to-dnd-monster-block textarea { border-radius:10px!important; border-color:#ddd0e8!important; background:#faf7fd!important; min-height:44px; }
   app-mythras-to-dnd-monster-block .extra-abilities { width:100%; }
   app-mythras-to-dnd-monster-block .source-textarea { min-height:260px; line-height:1.7; font-size:14px; }
-  app-responsive-character-viewer .simple-table { border-collapse:separate; border-spacing:0; border:1px solid #e5dceb; border-radius:10px; overflow:hidden; }
-  app-responsive-character-viewer .simple-table td, app-responsive-character-viewer .simple-table th { border:0; border-bottom:1px solid #eee7f3; padding:12px; }
-  app-responsive-character-viewer .simple-table th { background:#f2ecf8; color:#755884; font-size:12px; font-weight:500; }
   @media(max-width:599px) {
     .app-container { padding:20px 12px; }
     .tool-header { padding:8px 0 24px; gap:16px; }

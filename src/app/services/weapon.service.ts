@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+import { CharacterWeapon } from '../model/character-weapon';
 import { Weapon } from '../model/weapon';
 import WeaponCategories from '../jsons/weapon-categories.json';
+import { getWeaponCost } from './shop.service';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +21,22 @@ export class WeaponService {
 
   getWeaponByName(name: string): Weapon {
     return this.getWeapons().find(weapon => weapon.name === name)!;
+  }
+
+  getWeaponsByMode(ranged: boolean): Weapon[] {
+    return this.getWeapons().filter(weapon => Boolean(weapon.ranged) === ranged);
+  }
+
+  createCharacterWeapon(name: string): CharacterWeapon | undefined {
+    const weapon = this.getWeaponByName(name);
+    if (!weapon) return undefined;
+    return Object.assign(new CharacterWeapon(weapon.name, {}), weapon, {
+      traits: weapon.traits.map(trait => ({ ...trait })),
+      used: [...weapon.used],
+      quantity: 1,
+      equipped: false,
+      cost: getWeaponCost(weapon.name),
+    });
   }
 }
 

@@ -1,4 +1,6 @@
 import { CharacterEquipment } from './character-equipment';
+import { CharacterEffect } from './character-effect';
+import { CharacterHistoryEvent } from './character-history';
 import { CharacterPassions } from './character-passions';
 import { Rollable } from './rollable';
 import { CharacterFamily } from "./character-family";
@@ -7,6 +9,11 @@ import { CharacterMagic } from "./character-magic";
 import { CharacterSkills } from "./character-skills";
 import { SocialClass } from "./social-class";
 import { v4 as uuidv4 } from 'uuid';
+
+export interface LocationInjury {
+    note?: string;
+    maximumHp?: number;
+}
 
 export class Character {
     id : string;
@@ -24,9 +31,15 @@ export class Character {
     frame : string;
 
     hp: CharacterHP;
-    currentHitPoints?: Partial<Record<keyof CharacterHP, number | string | null>>;
+    currentValues?: Record<string, number | string | null>;
+    currentHitPoints?: Partial<Record<string, number | string | null>>;
+    locationInjuries?: Record<string, LocationInjury>;
+    portraitUrl?: string;
+    portrait?: string;
     sessionNotes?: string;
     fatigueLevel?: string;
+    activeEffects?: CharacterEffect[];
+    history?: CharacterHistoryEvent[];
     movementRate: number;
     age: number;
     culture : string;

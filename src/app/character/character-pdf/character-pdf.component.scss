@@ -6467,3 +6467,14 @@ select {
  text-align:center;
  white-space:nowrap;
 }
+.custom-hp-print {
+  width: 935px; box-sizing: border-box; margin: 16px auto 0; padding: 20px 28px;
+  background: white; color: #252525;
+}
+.custom-hp-print table { border-collapse: collapse; width: 100%; }
+.custom-hp-print th, .custom-hp-print td { text-align: left; padding: 8px; border-bottom: 1px solid #ccc; }
+.custom-hp-print input { width: 75px; color: inherit; background: transparent; }
+@media print {
+  .custom-hp-print { break-before: page; width: auto; }
+  .custom-hp-print input { border: 0; }
+}

@@ -1,5 +1,6 @@
 import { AppStorageService } from './app-storage.service';
 import { hydrateCharacter } from './character-format';
+import { getCurrentHp, getHitLocations, setCurrentHp } from './hit-points';
 describe('Character storage safety', () => {
     let service: AppStorageService;
     beforeEach(() => { localStorage.clear(); service = new AppStorageService(); });
@@ -28,6 +29,22 @@ describe('Character storage safety', () => {
         character.name = 'Changed';
         service.saveCharacter(character, 'view-character');
         expect(JSON.parse(localStorage.getItem('creation-character')!).name).toBe('Changed');
+    });
+    it('keeps a custom location edit in the library and active views after reopening', () => {
+        const raw = JSON.stringify({ id: 'creature', species: 'Wyvern', hp: { tail: 6 } });
+        localStorage.setItem('character-creature', raw);
+        localStorage.setItem('view-character', raw);
+        localStorage.setItem('creation-character', raw);
+        const character = service.readCharacter('view-character');
+        setCurrentHp(character, 'tail', -2);
+        service.saveCharacter(character, 'view-character');
+
+        const reopened = new AppStorageService();
+        for (const key of ['character-creature', 'view-character', 'creation-character']) {
+            const restored = reopened.readCharacter(key);
+            expect(getHitLocations(restored).map(location => location.key)).toEqual(['tail']);
+            expect(getCurrentHp(restored, 'tail')).toBe(-2);
+        }
     });
     it('captures the previous session and preserves the first snapshot while editing', () => {
         const original = JSON.stringify({ id: 'one', name: 'Before', skills: {} });

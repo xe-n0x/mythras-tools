@@ -1,7 +1,7 @@
 import { Character } from '../model/character';
 import { Skill } from '../model/skill';
 import { MysticPath } from '../model/mystic-path';
-import { restoreLegacyCurrentHp } from './hit-points';
+import { hasCustomHitLocations, hasNonHumanSpecies, restoreLegacyCurrentHp } from './hit-points';
 function record(value: any): value is Record<string, any> {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -25,6 +25,21 @@ export function hydrateCharacter(saved: unknown): Character {
         throw new Error('Expected a character JSON object.');
     const defaults = new Character();
     const character = restore(defaults, saved) as Character;
+    if (record(saved['hp'])) {
+        const explicitHp = restore({}, saved['hp']);
+        if (hasNonHumanSpecies(character) || hasCustomHitLocations(explicitHp)) {
+            // Keep only the stored locations. A partial legacy definition can
+            // still inherit the defaults for its own standard location.
+            for (const key of Object.keys(explicitHp)) {
+                if (record(explicitHp[key]) && Object.prototype.hasOwnProperty.call(defaults.hp, key)) {
+                    explicitHp[key] = restore(defaults.hp[key as keyof typeof defaults.hp], explicitHp[key]);
+                }
+            }
+            character.hp = explicitHp;
+        }
+    } else if (hasNonHumanSpecies(character)) {
+        character.hp = restore({}, saved['hp']);
+    }
     if (typeof character.id === 'number')
         character.id = String(character.id);
     if (!character.id || typeof character.id !== 'string')

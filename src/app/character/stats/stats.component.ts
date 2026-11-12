@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { Character } from 'src/app/model/character';
 import { Skill } from 'src/app/model/skill';
 import { getDamageModifier, getSkillBase } from 'src/app/services/character-service.service';
+import { getHitLocations, getMaximumHp, hasCustomHitLocations, HIT_LOCATIONS } from 'src/app/services/hit-points';
 
 @Component({
   selector: 'app-stats',
@@ -11,6 +12,12 @@ import { getDamageModifier, getSkillBase } from 'src/app/services/character-serv
 export class StatsComponent {
 
   @Input() public character: Character;
+
+  get usesStandardHpFields(): boolean {
+    return !hasCustomHitLocations(this.character.hp) && HIT_LOCATIONS.every(({key}) => Array.isArray(this.character.hp[key]?.base));
+  }
+  get customHitLocations() { return getHitLocations(this.character); }
+  customMaximumHp(location: string): number | '' { return getMaximumHp(this.character, location); }
   
   getSkills(prof : boolean) : Skill[] {
     return this.character.skills.skills.filter(skill => skill.professional == prof);

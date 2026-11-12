@@ -1,0 +1,77 @@
+<section class="effects-panel" [attr.aria-label]="location ? 'Эффекты части тела' : 'Эффекты и состояния'">
+  <header>
+    <h3>{{location ? 'Эффекты части тела' : 'Эффекты и состояния'}}</h3>
+    <button class="choice-action" type="button" aria-haspopup="dialog" (click)="manageEffects.showModal()">Управлять</button>
+  </header>
+  <ul class="effect-summary" *ngIf="visibleEffects.length">
+    <li *ngFor="let effect of visibleEffects" [class.inactive]="!effect.active">
+      <button type="button" class="choice-action" (click)="manageEffects.showModal()">{{ru(effect.name)}}<ng-container *ngIf="effect.kind === 'fatigue'"> · {{ru(effect.level)}}</ng-container><small>{{effect.active ? 'Активен' : 'Отключён'}}</small></button>
+    </li>
+  </ul>
+</section>
+<dialog #manageEffects class="choice-dialog" [attr.aria-label]="location ? 'Эффекты части тела' : 'Эффекты и состояния'" (close)="cancel()">
+  <header>
+    <h3>{{location ? 'Эффекты части тела' : 'Эффекты и состояния'}}</h3>
+    <button class="choice-action" type="button" (click)="manageEffects.close()">Закрыть</button>
+  </header>
+  <label class="fatigue-picker" *ngIf="!location && fatigue.length < 2">Уровень усталости
+    <select [ngModel]="fatigueLevel" (ngModelChange)="setFatigue($event)">
+      <option value="" disabled>Выберите уровень</option>
+      <option *ngFor="let level of fatigueLevels" [value]="level">{{ru(level)}}</option>
+    </select>
+  </label>
+  <ul class="effect-list" *ngIf="visibleEffects.length">
+    <li *ngFor="let effect of visibleEffects" [class.inactive]="!effect.active">
+      <header>
+        <strong>{{ru(effect.name)}}<ng-container *ngIf="effect.kind === 'fatigue'"> · {{ru(effect.level)}}</ng-container></strong>
+        <span class="effect-status">{{effect.active ? 'Активен' : 'Отключён'}}</span>
+      </header>
+      <p [class.positive]="effect.kind === 'modifier' && effect.operation === 'add' && effect.value > 0"
+         [class.negative]="effect.kind === 'modifier' && effect.operation === 'add' && effect.value < 0">{{impact(effect)}}</p>
+      <p *ngIf="hasConflict(effect)" class="negative" role="status">Эффекты конфликтуют. Отключите лишние записи.</p>
+      <p>{{ruleRef(effect.source)}}</p>
+      <p *ngIf="effect.description">{{ru(effect.description)}}</p>
+      <p *ngIf="effect.consequences">Последствия по решению ведущего: {{effect.consequences}}</p>
+      <p *ngIf="effect.kind === 'stun'">Отключите после указанного числа ходов.</p>
+      <p *ngIf="effect.ends">Окончание: {{ru(effect.ends)}}</p>
+      <p *ngIf="effect.kind === 'fatigue' && fatigueRules[effect.level].recovery as recovery">Восстановление после нагрузки: {{ru(recovery)}} ÷ скорость лечения — время полного отдыха на один уровень.</p>
+      <div class="effect-actions">
+        <button class="choice-action" *ngIf="effect.kind !== 'fatigue'" type="button" (click)="edit(effect)" [attr.aria-label]="'Изменить: ' + ru(effect.name)">Изменить</button>
+        <button class="choice-action" type="button" (click)="toggle(effect)" [attr.aria-label]="(effect.active ? 'Отключить: ' : 'Включить: ') + ru(effect.name)">{{effect.active ? 'Отключить' : 'Включить'}}</button>
+        <button class="choice-action" type="button" (click)="remove(effect)" [attr.aria-label]="'Удалить: ' + ru(effect.name)">Удалить</button>
+      </div>
+    </li>
+  </ul>
+  <button class="choice-action add-effect" type="button" (click)="adding ? cancel() : adding = true">{{adding ? 'Отменить правку' : 'Добавить эффект'}}</button>
+  <form *ngIf="adding" class="effect-editor" (ngSubmit)="add()">
+    <label>Тип<select [(ngModel)]="kind" name="kind">
+      <option value="note">Запись о состоянии</option><option value="modifier">Модификатор ведущего</option>
+      <option *ngIf="location" value="stun">Оглушение части тела (Core Rules)</option>
+    </select></label>
+    <ng-container *ngIf="kind !== 'stun'">
+      <label>Название<input required [(ngModel)]="name" name="name" /></label>
+      <label>Источник (необязательно)<input [(ngModel)]="source" name="source" placeholder="Решение ведущего" /></label>
+    </ng-container>
+    <ng-container *ngIf="kind === 'modifier'">
+      <label>{{location ? 'Общий параметр персонажа' : 'Параметр'}}<select [(ngModel)]="targetKey" name="target">
+        <option value="">Выберите параметр</option>
+        <option *ngFor="let target of targets; trackBy: trackTarget" [value]="target.key">{{ru(target.label)}}</option>
+      </select></label>
+      <label>Изменение<select [(ngModel)]="operation" name="operation"><option value="add">Прибавить или вычесть</option><option value="set">Задать итоговое значение</option></select></label>
+      <label>Значение<input type="number" step="1" required [(ngModel)]="value" name="value" /></label>
+    </ng-container>
+    <ng-container *ngIf="kind === 'stun'">
+      <label>Область тела<select [(ngModel)]="area" name="area" required>
+        <option value="">Выберите область</option><option value="head">Голова</option>
+        <option value="torso">Туловище</option><option value="other">Другая часть тела</option>
+      </select></label>
+      <label>Нанесённый урон<input type="number" name="damage" [(ngModel)]="damage" min="1" step="1" required /></label>
+      <label class="stun-confirm"><input type="checkbox" name="stunConfirmed" [(ngModel)]="stunConfirmed" /> Ведущий подтвердил ранение дробящим оружием и проигранную встречную проверку Выносливости.</label>
+    </ng-container>
+    <label>Описание<textarea rows="2" [(ngModel)]="description" name="description"></textarea></label>
+    <label *ngIf="kind !== 'stun'">Последствия по решению ведущего<textarea rows="2" [(ngModel)]="consequences" name="consequences"></textarea></label>
+    <label>Длительность или условие окончания<input [(ngModel)]="ends" name="ends" /></label>
+    <p class="effect-error" *ngIf="submitted && validationError" role="alert">{{ru(validationError)}}</p>
+    <button class="choice-action" type="submit">Сохранить эффект</button>
+  </form>
+</dialog>

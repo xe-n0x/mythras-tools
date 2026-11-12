@@ -1,0 +1,47 @@
+<section class="dice-roller" aria-label="Бросок кубиков">
+  <label class="motion"><input type="checkbox" [ngModel]="animate" (ngModelChange)="animateChange.emit($event)" /> Анимировать кубики</label>
+
+  <form *ngIf="!result && (!check || check.target !== null)" (ngSubmit)="submit()" class="dice-form">
+    <label>Способ броска
+      <select name="origin" [(ngModel)]="origin">
+        <option value="virtual">Виртуальные кубики</option>
+        <option value="manual">Физические кубики · ввести результат</option>
+      </select>
+    </label>
+    <ng-container *ngIf="!check">
+      <div class="dice-fields">
+        <label>Кубик<select name="sides" [(ngModel)]="sides"><option *ngFor="let side of sidesList" [ngValue]="side">d{{side}}</option></select></label>
+        <label>Количество<input type="number" name="count" [(ngModel)]="count" min="1" max="50" step="1" /></label>
+        <label>Модификатор<input type="number" name="modifier" [(ngModel)]="modifier" min="-10000" max="10000" step="1" /></label>
+      </div>
+      <label>Своё выражение (необязательно)<input name="expression" [(ngModel)]="customExpression" maxlength="128" placeholder="Например, 1d8+1d6−2" spellcheck="false" /></label>
+    </ng-container>
+    <label *ngIf="origin === 'manual'">{{check ? 'Результат d100' : 'Значения кубиков в порядке выражения'}}
+      <input name="manual" [(ngModel)]="manual" [attr.inputmode]="check ? 'numeric' : 'text'"
+        [attr.maxlength]="check ? 3 : 256" [placeholder]="check ? '01–99 или 00' : 'Например, 4, 6'" autocomplete="off" />
+    </label>
+    <p class="dice-error" *ngIf="error" role="alert">{{ru(error)}}</p>
+    <button type="submit" class="roll-button">{{origin === 'manual' ? 'Записать бросок' : 'Бросить кубики'}}</button>
+  </form>
+
+  <div class="dice-result" *ngIf="result as roll" [class.animated]="animate" [attr.data-degree]="roll.outcome?.degree" aria-live="polite">
+    <p class="roll-origin">{{roll.dice.origin === 'manual' ? 'Физические кубики · ручной ввод' : 'Виртуальные кубики'}} · {{roll.dice.expression}}</p>
+    <div class="dice-faces" aria-hidden="true">
+      <ng-container *ngIf="percentile as faces; else otherDice">
+        <span class="die die-tens"><small>Десятки</small>{{faces[0]}}0</span>
+        <span class="die die-units"><small>Единицы</small>{{faces[1]}}</span>
+      </ng-container>
+      <ng-template #otherDice>
+        <span class="die" *ngFor="let die of roll.dice.dice | slice:0:6"><small>d{{die.sides}}</small>{{die.sign < 0 ? '−' : ''}}{{die.value}}</span>
+      </ng-template>
+    </div>
+    <strong class="roll-total">{{percentile ?? roll.dice.total}}</strong>
+    <ng-container *ngIf="roll.outcome as outcome; else sum">
+      <strong class="roll-degree">{{ru(outcome.degree)}}</strong>
+      <p>{{ru(outcome.explanation)}}</p>
+      <p *ngIf="roll.check as snapshot">Цель {{snapshot.target | number:'1.0-4'}}% · {{ru(snapshot.grade)}}</p>
+    </ng-container>
+    <ng-template #sum><p class="roll-breakdown">{{breakdown}} = {{roll.dice.total}}</p></ng-template>
+    <button type="button" class="new-roll" (click)="newRoll()">Новый бросок</button>
+  </div>
+</section>

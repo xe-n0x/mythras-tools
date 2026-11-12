@@ -1,6 +1,7 @@
 import { Equipment } from './../../model/equipment';
 import { Component, Input } from '@angular/core';
 import { resetObject } from 'src/app/services/common.service';
+import { sheetRu } from 'src/app/services/sheet-labels';
 
 @Component({
   selector: 'equipment',
@@ -10,6 +11,9 @@ import { resetObject } from 'src/app/services/common.service';
 export class EquipmentEditComponent {
 
   @Input() equipment : Equipment;
+  @Input() russian = false;
+  ui(english: string, russian: string): string { return this.russian ? russian : english; }
+  label(value: string): string { return this.russian ? sheetRu(value) : value; }
 
   changedBaseMaterial(base : string) : void {
     resetObject(this.equipment);

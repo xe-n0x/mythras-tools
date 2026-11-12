@@ -1,7 +1,7 @@
 <p>This are the basic Attributes that are calculated from the characteristics, if you don't like these results, change the characteristics.</p>
 <br />
 <p>Hit Point Locations</p>
-<div class="hp-attributes">
+<div class="hp-attributes" *ngIf="usesStandardHpFields; else customHp">
     <div class="head-wrap single-wrap">
         <div class="attribute hp-head">
             <span class="skill-name">{{character.hp.head.name}}</span>
@@ -39,6 +39,9 @@
         </div>
     </div>
 </div>
+<ng-template #customHp>
+    <ul><li *ngFor="let location of customHitLocations">{{location.label}} {{customMaximumHp(location.key)}}</li></ul>
+</ng-template>
 <hr />
 <p>Calculated characteristics</p>
 <div class="char-attributes">

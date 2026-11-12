@@ -322,6 +322,12 @@ export function getTotalFromItems(
         'armorPenalty',
         'equipmentAndArmor'].includes(k))
           return 0;
+      if (k === 'spareArmour') {
+        return onlyArmor === true || !Array.isArray(character.equipment.spareArmour)
+          ? 0
+          : character.equipment.spareArmour.reduce((total, entry) =>
+            total + (entry?.piece ? getPropWithQuantity(entry.piece, prop) : 0), 0);
+      }
       if (['weapons', 'items'].includes(k)) {
         if(onlyArmor == true)
           return 0;

@@ -164,6 +164,10 @@ import { ViewCharacterComponent } from './pages/view-character/view-character.co
 import { CreateSkillComponent } from './character/modals/create-skill/create-skill.component';
 import { MythrasToDndMonsterBlockComponent } from './pages/mythras-to-dnd-monster-block/mythras-to-dnd-monster-block.component';
 import { ResponsiveCharacterViewerComponent } from './pages/responsive-character-viewer/responsive-character-viewer.component';
+import { CharacterHealthComponent } from './character/character-health/character-health.component';
+import { CharacterEffectsComponent } from './character/character-effects/character-effects.component';
+import { DiceRollerComponent } from './character/dice-roller/dice-roller.component';
+import { CommittedNumberComponent } from './character/committed-number/committed-number.component';
 import { RouterModule } from '@angular/router';
 
 
@@ -316,6 +320,10 @@ import { RouterModule } from '@angular/router';
     ResponsiveCharacterViewerComponent
   ],
   imports: [
+    CharacterHealthComponent,
+    CharacterEffectsComponent,
+    DiceRollerComponent,
+    CommittedNumberComponent,
     CustomizationComponent,
     SkillActionsComponent,
     CommonModule,

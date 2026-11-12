@@ -6,10 +6,14 @@ import { Skill } from '../../model/skill';
 import { CombatStyle } from '../../model/combat-style';
 import { CharacterWeapon } from '../../model/character-weapon';
 import { getSkillTotal } from '../../services/character-service.service';
+import { sheetRu } from '../../services/sheet-labels';
 @Component({ selector: 'app-customization', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './customization.component.html', styleUrls: ['./customization.component.scss'] })
 export class CustomizationComponent {
     @Input()
     character: Character;
+    @Input() russian = false;
+    ui(english: string, russian: string): string { return this.russian ? russian : english; }
+    label(value: string): string { return this.russian ? sheetRu(value) : value; }
     readonly characteristics = ['str', 'con', 'siz', 'dex', 'int', 'pow', 'cha'];
     readonly magicTypes = [{ key: 'folk', label: 'Folk magic' }, { key: 'sorcery', label: 'Sorcery' }, { key: 'miracles', label: 'Theism' }, { key: 'custom', label: 'Other magic / abilities' }];
     readonly armourLocations = [{ key: 'head', label: 'Head' }, { key: 'chest', label: 'Chest' }, { key: 'abdoment', label: 'Abdomen' }, { key: 'leftArm', label: 'Left arm' }, { key: 'rightArm', label: 'Right arm' }, { key: 'leftLeg', label: 'Left leg' }, { key: 'rightLeg', label: 'Right leg' }];

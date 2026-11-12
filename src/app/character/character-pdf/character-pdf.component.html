@@ -2170,7 +2170,7 @@
           data-field-name="Run"
           disabled="true"
           autoResize
-          [fixedvalue]="getRun()"
+          [fixedvalue]="formatMeasurement(getRun())"
         />
         <input
           id="form8_2"
@@ -2181,7 +2181,7 @@
           data-field-name="Sprint"
           disabled="true"
           autoResize
-          [fixedvalue]="getSprint()"
+          [fixedvalue]="formatMeasurement(getSprint())"
         />
         <input
           id="form9_2"
@@ -2189,9 +2189,10 @@
           tabindex="157"
           data-objref="247 0 R"
           data-field-name="HorizJump"
+          title="Horizontal jump with a run-up, before armour"
           disabled="true"
           autoResize
-          [fixedvalue]="getHorizontal()"
+          [fixedvalue]="formatMeasurement(getHorizontal())"
         />
         <input
           id="form10_2"
@@ -2199,9 +2200,10 @@
           tabindex="158"
           data-objref="252 0 R"
           data-field-name="VerticalJump"
+          title="Vertical jump with a run-up, before armour"
           disabled="true"
           autoResize
-          [fixedvalue]="getVertical()"
+          [fixedvalue]="formatMeasurement(getVertical())"
         />
         <input
           id="form11_2"
@@ -2245,8 +2247,9 @@
           data-field-name="SwimRate"
           disabled="true"
           autoResize
-          [fixedvalue]="getSwim()"
+          [fixedvalue]="formatMeasurement(getSwim())"
         />
+        <ng-container *ngIf="usesStandardHpFields">
         <span *ngFor="let location of pdfHpLocations" class="hp-maximum-label" [style.top.px]="location.top">Max {{getMaximumHp(location.key)}}</span>
         <input
           id="form15_2"
@@ -2381,6 +2384,7 @@
           [ngModel]="getCurrentHp('rightLeg')"
           (ngModelChange)="setCurrentHp('rightLeg',$event)"
         />
+        </ng-container>
         <textarea
           id="form29_2"
           tabindex="177"
@@ -3617,3 +3621,16 @@
   </div>
 </div>
 <!-- </form> -->
+<section class="custom-hp-print" *ngIf="!usesStandardHpFields && customHitLocations.length">
+  <h2>Hit locations</h2>
+  <table>
+    <thead><tr><th scope="col">Location</th><th scope="col">Maximum HP</th><th scope="col">Current HP</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let location of customHitLocations">
+        <th scope="row">{{location.label}}</th>
+        <td>{{getMaximumHp(location.key) === '' ? '—' : getMaximumHp(location.key)}}</td>
+        <td><input type="number" [attr.aria-label]="'Current HP — ' + location.label" [ngModel]="getCurrentHp(location.key)" (ngModelChange)="setCurrentHp(location.key, $event)" /></td>
+      </tr>
+    </tbody>
+  </table>
+</section>

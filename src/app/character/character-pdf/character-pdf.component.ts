@@ -1,3 +1,6 @@
+import { withCurrentCharacteristics, withEffectiveCharacteristics } from 'src/app/services/characteristics';
+import { formatMeasurement, runningJumpDistance } from 'src/app/services/movement-display';
+import { armourPenalty } from 'src/app/services/character-loadout';
 import { Weapon } from './../../model/weapon';
 import { CombatStyle } from './../../model/combat-style';
 import { orZero } from 'src/app/services/common.service';
@@ -17,7 +20,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CharacterPassions } from 'src/app/model/character-passions';
 import { Spell } from 'src/app/model/spell';
 import { SpecialEffectsService } from 'src/app/services/special-effects.service';
-import { HitLocation, getCurrentHp, setCurrentHp, getMaximumHp } from 'src/app/services/hit-points';
+import { HitLocation, editCurrentHp, getCurrentHp, getHitLocations, getMaximumHp, usesHumanoidBodyMap } from 'src/app/services/hit-points';
 
 @Component({
   selector: 'character-pdf',
@@ -31,9 +34,11 @@ export class CharacterPdfComponent {
     {key:'head',top:298}, {key:'leftArm',top:343}, {key:'rightArm',top:388},
     {key:'chest',top:433}, {key:'abdoment',top:478}, {key:'leftLeg',top:523}, {key:'rightLeg',top:568},
   ];
-  getCurrentHp(location: HitLocation): number | string { return getCurrentHp(this.character, location); }
-  setCurrentHp(location: HitLocation, value: string | number | null): void { setCurrentHp(this.character, location, value); }
-  getMaximumHp(location: HitLocation): number { return getMaximumHp(this.getCharacterWithCurrentCharacteristics(), location); }
+  get usesStandardHpFields(): boolean { return usesHumanoidBodyMap(this.character); }
+  get customHitLocations() { return getHitLocations(this.character); }
+  getCurrentHp(location: string): number | string { return getCurrentHp(this.character, location); }
+  setCurrentHp(location: string, value: string | number | null): void { editCurrentHp(this.character, location, value); }
+  getMaximumHp(location: string): number | '' { return getMaximumHp(withEffectiveCharacteristics(this.character), location); }
 
   constructor(private effects: SpecialEffectsService) {}
 
@@ -190,30 +195,7 @@ export class CharacterPdfComponent {
   }
 
   private getCharacterWithCurrentCharacteristics(): Character {
-    const current = this.getCurrentStore();
-    const skills = {
-      ...this.character.skills,
-      str: this.resolveCurrentCharacteristic(current['str'], this.character.skills.str),
-      con: this.resolveCurrentCharacteristic(current['con'], this.character.skills.con),
-      siz: this.resolveCurrentCharacteristic(current['siz'], this.character.skills.siz),
-      dex: this.resolveCurrentCharacteristic(current['dex'], this.character.skills.dex),
-      int: this.resolveCurrentCharacteristic(current['int'], this.character.skills.int),
-      pow: this.resolveCurrentCharacteristic(current['pow'], this.character.skills.pow),
-      cha: this.resolveCurrentCharacteristic(current['cha'], this.character.skills.cha),
-    } as any;
-    return { ...(this.character as any), skills } as Character;
-  }
-
-  private resolveCurrentCharacteristic(currentValue: any, originalValue: any): number {
-    if (
-      currentValue === '' ||
-      currentValue === null ||
-      currentValue === undefined ||
-      Number.isNaN(Number(currentValue))
-    ) {
-      return Number(originalValue) || 0;
-    }
-    return Number(currentValue);
+    return withCurrentCharacteristics(this.character!);
   }
 
   getPassion(index: number): string {
@@ -320,12 +302,7 @@ ${social ? social.resources : ''}`.trim() + '\n';
     return orZero(this.getFixedSkill('Swim') as any);
   }
 
-  getHeight(): number {
-    let height = this.character.height;
-    if (!height) return 0;
-    if (height < 10) return height;
-    return height / 100;
-  }
+  readonly formatMeasurement = formatMeasurement;
 
   getRun(): number {
     return (
@@ -343,12 +320,12 @@ ${social ? social.resources : ''}`.trim() + '\n';
     );
   }
 
-  getHorizontal(): number {
-    return this.getHeight() * 2 + Math.floor(this.getAthletics() / 20);
+  getHorizontal(): number | '' {
+    return runningJumpDistance(Number(this.character?.height), this.getAthletics(), 'horizontal');
   }
 
-  getVertical(): number {
-    return this.getHeight() * 2 + Math.floor(this.getAthletics() / 20) * 0.2;
+  getVertical(): number | '' {
+    return runningJumpDistance(Number(this.character?.height), this.getAthletics(), 'vertical');
   }
 
   getSwim(): number {
@@ -532,11 +509,7 @@ ${social ? social.resources : ''}`.trim() + '\n';
   }
 
   getArmorPenalty(): number {
-    if (this.character.equipment.armorPenalty == undefined)
-      return this.character.equipment.armourEnc == undefined
-        ? getOnlyArmor(this.character, 'enc') / 5
-        : this.character.equipment.armourEnc / 5;
-    return this.character.equipment.armorPenalty;
+    return armourPenalty(this.character);
   }
 
   setArmorPenalty(event: any) {

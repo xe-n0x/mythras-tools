@@ -1,35 +1,35 @@
 <p class="intro">
-  Your campaign, your rules. Create and edit anything below. Point allowances are guidance; every bonus remains editable.
+  {{ui("Your campaign, your rules. Create and edit anything below. Point allowances are guidance; every bonus remains editable.", "Здесь можно добавлять и редактировать данные кампании. Лимиты очков служат ориентиром, бонусы доступны для правки.")}}
 </p>
 <details open>
   <summary>
-    Professional skills & specializations
+    {{ui("Professional skills & specializations", "Профессиональные навыки и специализации")}}
     <span>
       {{customSkills.length}}
     </span>
   </summary>
   <p>
-    Choose the two characteristics used for the base. The same characteristic twice gives twice its value. Custom skills are included on your sheet.
+    {{ui("Choose the two characteristics used for the base. The same characteristic twice gives twice its value. Custom skills are included on your sheet.", "Выберите две характеристики для базы навыка. Повторный выбор удваивает значение. Свой навык появится в листе.")}}
   </p>
   <article *ngFor="let skill of customSkills; let i=index">
     <div class="entry-heading">
       <label>
-        Skill name
+        {{ui("Skill name", "Название навыка")}}
         <input [(ngModel)]="skill.name">
       </label>
       <strong>
         {{total(skill)}}%
       </strong>
-      <button type="button" class="remove" (click)="remove(customSkills,i)" aria-label="Remove skill">
-        Remove
+      <button type="button" class="remove" (click)="remove(customSkills,i)" [attr.aria-label]="ui('Remove skill', 'Удалить навык')">
+        {{ui("Remove", "Удалить")}}
       </button>
     </div>
     <div class="field-grid">
       <label *ngFor="let n of [0,1]">
-        Base characteristic {{n+1}}
+        {{ui("Base characteristic", "Базовая характеристика")}} {{n+1}}
         <select [(ngModel)]="skill.base[n]">
           <option [ngValue]="undefined">
-            None
+            {{ui("None", "Нет")}}
           </option>
           <option *ngFor="let stat of characteristics" [value]="stat">
             {{stat.toUpperCase()}}
@@ -37,34 +37,34 @@
         </select>
       </label>
       <label>
-        Base multiplier
+        {{ui("Base multiplier", "Множитель базы")}}
         <input type="number" [(ngModel)]="skill.multiply" placeholder="1">
       </label>
       <label>
-        Base adjustment
+        {{ui("Base adjustment", "Поправка к базе")}}
         <input type="number" [(ngModel)]="skill.add" placeholder="0">
       </label>
       <label>
-        Culture points
+        {{ui("Culture points", "Очки культуры")}}
         <input type="number" [(ngModel)]="skill.cultureBonus">
       </label>
       <label>
-        Career points
+        {{ui("Career points", "Очки профессии")}}
         <input type="number" [(ngModel)]="skill.careerBonus">
       </label>
       <label>
-        Bonus points
+        {{ui("Bonus points", "Бонусные очки")}}
         <input type="number" [(ngModel)]="skill.extraBonus">
       </label>
     </div>
   </article>
   <button type="button" (click)="addSkill()">
-    + Professional skill
+    {{ui("+ Professional skill", "+ Профессиональный навык")}}
   </button>
 </details>
 <details>
   <summary>
-    Combat styles & traits
+    {{ui("Combat styles & traits", "Боевые стили и особенности")}}
     <span>
       {{character.skills.combatstyles.length}}
     </span>
@@ -72,229 +72,229 @@
   <article *ngFor="let style of character.skills.combatstyles; let i=index">
     <div class="entry-heading">
       <label>
-        Style name
+        {{ui("Style name", "Название стиля")}}
         <input [(ngModel)]="style.name">
       </label>
       <strong>
         {{total(style)}}%
       </strong>
       <button type="button" class="remove" (click)="remove(character.skills.combatstyles,i)">
-        Remove
+        {{ui("Remove", "Удалить")}}
       </button>
     </div>
     <div class="field-grid">
       <label>
-        Culture points
+        {{ui("Culture points", "Очки культуры")}}
         <input type="number" [(ngModel)]="style.cultureBonus">
       </label>
       <label>
-        Career points
+        {{ui("Career points", "Очки профессии")}}
         <input type="number" [(ngModel)]="style.careerBonus">
       </label>
       <label>
-        Bonus points
+        {{ui("Bonus points", "Бонусные очки")}}
         <input type="number" [(ngModel)]="style.extraBonus">
       </label>
       <label *ngFor="let key of ['Melee','Ranged','Shields']">
-        {{key}} weapons
+        {{label(key)}} {{ui("weapons", "оружие")}}
         <input [(ngModel)]="style.weapons[key]">
       </label>
     </div>
     <button *ngIf="!style.selectedTrait" type="button" (click)="style.selectedTrait={name:'',trait:''}">
-      Add trait
+      {{ui("Add trait", "Добавить особенность")}}
     </button>
     <div *ngIf="style.selectedTrait">
       <label>
-        Trait name
+        {{ui("Trait name", "Название особенности")}}
         <input [(ngModel)]="style.selectedTrait.name">
       </label>
       <label>
-        Trait rules
+        {{ui("Trait rules", "Правила особенности")}}
         <textarea rows="3" [(ngModel)]="style.selectedTrait.trait">
         </textarea>
       </label>
     </div>
   </article>
   <button type="button" (click)="addStyle()">
-    + Combat style
+    {{ui("+ Combat style", "+ Боевой стиль")}}
   </button>
 </details>
 <details>
   <summary>
-    Magic, spirits & abilities
+    {{ui("Magic, spirits & abilities", "Магия, духи и способности")}}
   </summary>
   <p>
-    Add spells to any tradition, including traditions without a cult. Other magic can describe any homebrew system.
+    {{ui("Add spells to any tradition, including traditions without a cult. Other magic can describe any homebrew system.", "Добавляйте заклинания к любой традиции, в том числе без культа. В разделе «Другая магия» можно описать свою систему.")}}
   </p>
   <section *ngFor="let type of magicTypes">
     <h3>
-      {{type.label}}
+      {{label(type.label)}}
     </h3>
     <article *ngFor="let spell of spells(type.key); let i=index">
       <div class="entry-heading">
         <label>
-          Name
+          {{ui("Name", "Название")}}
           <input [(ngModel)]="spell.name">
         </label>
         <button type="button" class="remove" (click)="remove(spells(type.key),i)">
-          Remove
+          {{ui("Remove", "Удалить")}}
         </button>
       </div>
       <label>
-        Tags / system / cost
+        {{ui("Tags / system / cost", "Метки, система, стоимость")}}
         <input [(ngModel)]="spell.tags">
       </label>
       <label>
-        Description & rules
+        {{ui("Description & rules", "Описание и правила")}}
         <textarea rows="4" [(ngModel)]="spell.description">
         </textarea>
       </label>
     </article>
     <button type="button" (click)="spells(type.key).push({name:'New spell',tags:'',description:''})">
-      + {{type.label}}
+      + {{label(type.label)}}
     </button>
   </section>
   <label>
-    Spirits & bindings
+    {{ui("Spirits & bindings", "Духи и связывание")}}
     <textarea rows="4" [(ngModel)]="character.magic.spirits">
     </textarea>
   </label>
   <label>
-    Mystic path
+    {{ui("Mystic path", "Путь мистика")}}
     <input [(ngModel)]="character.magic.path.path">
   </label>
   <label>
-    Other abilities
+    {{ui("Other abilities", "Другие способности")}}
     <textarea rows="4" [(ngModel)]="character.magic.abilities">
     </textarea>
   </label>
 </details>
 <details>
   <summary>
-    Weapons, items & armour
+    {{ui("Weapons, items & armour", "Оружие, предметы и броня")}}
   </summary>
   <h3>
-    Weapons
+    {{ui("Weapons", "Оружие")}}
   </h3>
   <article *ngFor="let weapon of character.equipment.weapons; let i=index">
     <div class="entry-heading">
       <label>
-        Name
+        {{ui("Name", "Название")}}
         <input [(ngModel)]="weapon.name">
       </label>
       <button type="button" class="remove" (click)="remove(character.equipment.weapons,i)">
-        Remove
+        {{ui("Remove", "Удалить")}}
       </button>
     </div>
     <div class="field-grid">
       <label>
-        Damage
+        {{ui("Damage", "Урон")}}
         <input [(ngModel)]="weapon.damage">
       </label>
       <label>
-        Size
+        {{ui("Size", "Размер")}}
         <input [(ngModel)]="weapon.size">
       </label>
       <label>
-        Reach
+        {{ui("Reach", "Досягаемость")}}
         <input [(ngModel)]="weapon.reach">
       </label>
       <label>
-        Range
+        {{ui("Range", "Дальность")}}
         <input [(ngModel)]="weapon.range">
       </label>
       <label>
-        AP
+        {{ui("AP", "ОБ")}}
         <input type="number" [(ngModel)]="weapon.ap">
       </label>
       <label>
-        HP
+        {{ui("HP", "ОЗ")}}
         <input type="number" [(ngModel)]="weapon.hp">
       </label>
       <label>
-        ENC
+        {{ui("ENC", "Нагрузка")}}
         <input type="number" [(ngModel)]="weapon.enc">
       </label>
       <label>
-        Cost
+        {{ui("Cost", "Стоимость")}}
         <input type="number" [(ngModel)]="weapon.cost">
       </label>
       <label>
-        Quantity
+        {{ui("Quantity", "Количество")}}
         <input type="number" [(ngModel)]="weapon.quantity">
       </label>
     </div>
     <label>
-      Traits & notes
+      {{ui("Traits & notes", "Особенности и заметки")}}
       <textarea [(ngModel)]="weapon.extra">
       </textarea>
     </label>
   </article>
   <button type="button" (click)="addWeapon()">
-    + Weapon
+    {{ui("+ Weapon", "+ Оружие")}}
   </button>
   <h3>
-    Items & equipment
+    {{ui("Items & equipment", "Предметы и снаряжение")}}
   </h3>
   <article *ngFor="let item of character.equipment.items; let i=index">
     <div class="entry-heading">
       <label>
-        Name
+        {{ui("Name", "Название")}}
         <input [(ngModel)]="item.name">
       </label>
       <button type="button" class="remove" (click)="remove(character.equipment.items,i)">
-        Remove
+        {{ui("Remove", "Удалить")}}
       </button>
     </div>
     <div class="field-grid">
       <label>
-        Quantity
+        {{ui("Quantity", "Количество")}}
         <input type="number" [(ngModel)]="item.quantity">
       </label>
       <label>
-        ENC
+        {{ui("ENC", "Нагрузка")}}
         <input type="number" [(ngModel)]="item.enc">
       </label>
       <label>
-        Cost
+        {{ui("Cost", "Стоимость")}}
         <input type="number" [(ngModel)]="item.cost">
       </label>
     </div>
     <label>
-      Description
+      {{ui("Description", "Описание")}}
       <textarea [(ngModel)]="item.description">
       </textarea>
     </label>
   </article>
   <button type="button" (click)="addItem()">
-    + Item
+    {{ui("+ Item", "+ Предмет")}}
   </button>
   <h3>
-    Armour by location
+    {{ui("Armour by location", "Броня по частям тела")}}
   </h3>
   <article *ngFor="let loc of armourLocations">
     <h4>
-      {{loc.label}}
+      {{label(loc.label)}}
     </h4>
     <div class="field-grid">
       <label>
-        Type
+        {{ui("Type", "Тип")}}
         <input [(ngModel)]="armour(loc.key).type">
       </label>
       <label>
-        Material
+        {{ui("Material", "Материал")}}
         <input [(ngModel)]="armour(loc.key).material">
       </label>
       <label>
-        AP
+        {{ui("AP", "ОБ")}}
         <input type="number" [(ngModel)]="armour(loc.key).ap">
       </label>
       <label>
-        ENC
+        {{ui("ENC", "Нагрузка")}}
         <input type="number" [(ngModel)]="armour(loc.key).enc">
       </label>
       <label>
-        Cost
+        {{ui("Cost", "Стоимость")}}
         <input type="number" [(ngModel)]="armour(loc.key).cost">
       </label>
     </div>
@@ -302,35 +302,35 @@
 </details>
 <details>
   <summary>
-    Cults, orders & factions
+    {{ui("Cults, orders & factions", "Культы, ордена и фракции")}}
   </summary>
   <p>
-    Edit an existing membership or add any number of other organizations.
+    {{ui("Edit an existing membership or add any number of other organizations.", "Измените сведения о членстве или добавьте другие организации.")}}
   </p>
   <article *ngFor="let entry of cults">
     <h3>
-      {{entry.label}}
+      {{label(entry.label)}}
     </h3>
     <div class="field-grid">
       <label>
-        Name
+        {{ui("Name", "Название")}}
         <input [(ngModel)]="cult(entry.key).name">
       </label>
       <label>
-        Rank
+        {{ui("Rank", "Ранг")}}
         <input [(ngModel)]="cult(entry.key).level">
       </label>
     </div>
     <label>
-      Standard skills
+      {{ui("Standard skills", "Стандартные навыки")}}
       <input [(ngModel)]="cult(entry.key).standardSkills">
     </label>
     <label>
-      Professional skills
+      {{ui("Professional skills", "Профессиональные навыки")}}
       <input [(ngModel)]="cult(entry.key).professionalSkills">
     </label>
     <label>
-      Spells, paths, spirits & membership rules
+      {{ui("Spells, paths, spirits & membership rules", "Заклинания, пути, духи и правила членства")}}
       <textarea rows="3" [(ngModel)]="cult(entry.key)[entry.detail]">
       </textarea>
     </label>
@@ -338,58 +338,58 @@
   <article *ngFor="let faction of factions; let i=index">
     <div class="entry-heading">
       <label>
-        Organization
+        {{ui("Organization", "Организация")}}
         <input [(ngModel)]="faction.name">
       </label>
       <button type="button" class="remove" (click)="remove(factions,i)">
-        Remove
+        {{ui("Remove", "Удалить")}}
       </button>
     </div>
     <label>
-      Rank / role
+      {{ui("Rank / role", "Ранг или роль")}}
       <input [(ngModel)]="faction.rank">
     </label>
     <label>
-      Rules, benefits & obligations
+      {{ui("Rules, benefits & obligations", "Правила, преимущества и обязанности")}}
       <textarea rows="4" [(ngModel)]="faction.description">
       </textarea>
     </label>
   </article>
   <button type="button" (click)="factions.push({name:'New faction',rank:'',description:''})">
-    + Cult or faction
+    {{ui("+ Cult or faction", "+ Культ или фракция")}}
   </button>
 </details>
 <details>
   <summary>
-    Campaign notes & custom details
+    {{ui("Campaign notes & custom details", "Заметки кампании и свои сведения")}}
   </summary>
   <div class="field-grid">
     <label>
-      Custom culture
+      {{ui("Custom culture", "Своя культура")}}
       <input [(ngModel)]="character.culture">
     </label>
     <label>
-      Custom career
+      {{ui("Custom career", "Своя профессия")}}
       <input [(ngModel)]="character.career">
     </label>
   </div>
   <article *ngFor="let note of notes; let i=index">
     <div class="entry-heading">
       <label>
-        Title
+        {{ui("Title", "Заголовок")}}
         <input [(ngModel)]="note.name">
       </label>
       <button type="button" class="remove" (click)="remove(notes,i)">
-        Remove
+        {{ui("Remove", "Удалить")}}
       </button>
     </div>
     <label>
-      Details
+      {{ui("Details", "Подробности")}}
       <textarea rows="5" [(ngModel)]="note.description">
       </textarea>
     </label>
   </article>
   <button type="button" (click)="notes.push({name:'New detail',description:''})">
-    + Custom detail
+    {{ui("+ Custom detail", "+ Дополнительная запись")}}
   </button>
 </details>
