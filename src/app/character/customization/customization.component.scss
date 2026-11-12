@@ -50,7 +50,7 @@ input,select,textarea {
   width:100%;
   box-sizing:border-box;
   padding:10px 12px;
-  border:1px solid #c5bfae;
+  border:1px solid #b6bdaa;
   border-radius:6px;
   background:#fffdf8;
   color:#1f1f1f;
@@ -65,9 +65,9 @@ textarea {
 button {
   padding:10px 16px;
   min-height:44px;
-  border:1px solid #673ab7;
+  border:1px solid #295562;
   border-radius:6px;
-  background:#673ab7;
+  background:#295562;
   color:white;
   font:inherit;
   cursor:pointer
@@ -97,7 +97,7 @@ h3 {
   margin-top:24px
 }
 :focus-visible {
-  outline:3px solid #b399db;
+  outline:3px solid #a77d46;
   outline-offset:2px
 }
 @media(max-width:480px) {

@@ -75,3 +75,23 @@ footer { padding: var(--app-space-5) 0; color: var(--app-color-muted); font-size
   .controls { grid-template-columns: minmax(0, 1fr); }
   header > a { width: 100%; }
 }
+
+/* Tennla — annotated rulebook presentation; filters and actions are unchanged. */
+:host { color: #293e3c; }
+.filters {
+  border-top: 3px solid #aa8048;
+  background: linear-gradient(115deg, #fffefa, #f1f2ea);
+}
+.rule-card {
+  position: relative;
+  border-top: 3px solid #b48d54;
+  background: #fffefa;
+}
+.rule-card h2 { color: #2e5259; font: 600 22px/1.25 Georgia, serif; }
+.rule-card .reference { color: #8d734c; }
+.rule-card .chip { background: #e4eeea; border-color: #cad8cf; color: #305d61; }
+.rule-card .chip.status { background: #f5ecdc; border-color: #dec9a8; color: #745a36; }
+.rule-card .tag { background: #f8f6ef; border-color: #d1d6cb; color: #3f655f; }
+.rule-card .tag:hover { background: #e8f0ec; border-color: #a77f4b; }
+.rule-card summary { color: #2c5b63; }
+.rule-card .note { background: #f5efdf; border-left-color: #a77f4b; }

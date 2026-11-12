@@ -1,18 +1,18 @@
 :host { display:block; min-width:0; }
-.style-filter-panel { padding:24px; background:#fffcf8; border:1px solid #e5dce9; border-radius:16px; }
+.style-filter-panel { padding:24px; background:#fffcf8; border:1px solid #e4e6da; border-radius:16px; }
 .filter-panel-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px; }
-.filter-panel-heading h2 { font-size:18px; font-weight:500; color:#4a315e; margin-bottom:6px; }
-.filter-panel-heading p { font-size:13px; color:#86718f; margin:0; line-height:1.6; }
+.filter-panel-heading h2 { font-size:18px; font-weight:500; color:#304b52; margin-bottom:6px; }
+.filter-panel-heading p { font-size:13px; color:#6d7f75; margin:0; line-height:1.6; }
 .results-toolbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin:24px 0 18px; }
-.results-toolbar p { font-size:14px; color:#74627f; margin:0; }
-.results-toolbar strong { color:#4e2d67; }
-.results-toolbar p span { color:#91849a; font-size:12px; }
+.results-toolbar p { font-size:14px; color:#5f776c; margin:0; }
+.results-toolbar strong { color:#2a535a; }
+.results-toolbar p span { color:#75877b; font-size:12px; }
 .pagination { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
-.pagination span { font-size:12px; color:#7b6789; }
+.pagination span { font-size:12px; color:#657b70; }
 .pagination button { min-width:72px; min-height:42px; }
 .bottom-pagination { margin-top:24px; }
 .styles-table-y { overflow:visible; min-width:0; }
-.empty-styles { text-align:center; padding:48px 20px; background:#fffdfb; border:1px dashed #d9c9e5; border-radius:14px; }
-.empty-styles h3 { font-size:20px; font-weight:500; color:#57376d; }
-.empty-styles p { font-size:14px; color:#84748e; }
+.empty-styles { text-align:center; padding:48px 20px; background:#fffdfb; border:1px dashed #d2d9c9; border-radius:14px; }
+.empty-styles h3 { font-size:20px; font-weight:500; color:#2c5359; }
+.empty-styles p { font-size:14px; color:#6b8074; }
 @media(max-width:599px) { .style-filter-panel { padding:18px 14px; } .filter-panel-heading { flex-wrap:wrap; gap:6px; } .results-toolbar { align-items:flex-start; flex-direction:column; } }

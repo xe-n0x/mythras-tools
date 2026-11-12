@@ -1,3 +1,4 @@
+@use '../../styles/tennla-visual' as tennla;
 :host { display:block; min-width:0; container-type:inline-size; }
 .health { border:1px solid var(--sheet-line); border-radius:var(--sheet-radius); background:var(--sheet-paper); box-shadow:var(--sheet-shadow); }
 .health-heading { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:4px 8px; padding:10px 12px; border-bottom:1px solid var(--sheet-line); border-radius:calc(var(--sheet-radius) - 1px) calc(var(--sheet-radius) - 1px) 0 0; background:var(--sheet-heading-wash, var(--sheet-sea-wash)); }
@@ -66,3 +67,6 @@ svg { display:block; width:100%; height:100%; }
 .restore-hp:not(:disabled) { color: var(--sheet-accent); cursor: pointer; }
 .restore-hp:not(:disabled):hover { background: var(--sheet-sea-wash); }
 .restore-hp:disabled { opacity: .55; }
+
+// Visual-only Tennla redesign; the existing behavior remains unchanged.
+@include tennla.health();

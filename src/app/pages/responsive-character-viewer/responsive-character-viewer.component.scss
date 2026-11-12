@@ -1,3 +1,4 @@
+@use '../../styles/tennla-visual' as tennla;
 @use '../../styles/sheet-choice' as choice;
 
 :host {
@@ -563,3 +564,6 @@ textarea { display: block; resize: vertical; }
   .show-mobile-skills .character-home { display: none; }
   .session-skill-list button { min-height: 40px; }
 }
+
+// Visual-only Tennla redesign; the existing behavior remains unchanged.
+@include tennla.viewer();

@@ -1,3 +1,4 @@
+@use '../../styles/tennla-visual' as tennla;
 @use '../../styles/sheet-choice' as choice;
 
 :host { display: block; min-width: 0; }
@@ -52,3 +53,6 @@ button { cursor: pointer; }
 .effect-editor button { align-self: end; }
 .effect-error { grid-column: 1 / -1; color: #8d2c2c; }
 .effect-editor .stun-confirm { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 6px; }
+
+// Visual-only Tennla redesign; the existing behavior remains unchanged.
+@include tennla.effects();

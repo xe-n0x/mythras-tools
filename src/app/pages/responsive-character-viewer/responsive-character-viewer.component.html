@@ -6,10 +6,21 @@
   <div class="app-container page">
     <div class="viewer-shell">
       <header class="app-page-header viewer-header">
+        <div class="tennla-header-engraving" aria-hidden="true">
+          <svg viewBox="0 0 520 170" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor">
+            <circle cx="252" cy="86" r="58" stroke-width="1.2"/>
+            <circle cx="252" cy="86" r="44" stroke-width=".8"/>
+            <circle cx="252" cy="86" r="20" stroke-width="1.2"/>
+            <path d="M252 2v24m0 120v22M168 86h24m120 0h24M192 26l18 19m84 81 18 19m0-119-18 19m-84 81-18 19" stroke-width="1.4"/>
+            <path d="M21 151h479m-464-6h26v-95H36zm4-101h18M31 50h36M31 56h36M433 145h26v-95h-26zm4-101h18m-23 6h36m-36 6h36" stroke-width="1.5"/>
+            <path d="M94 145c17-8 34-8 51 0 17-8 34-8 51 0m124 0c17-8 34-8 51 0 17-8 34-8 51 0" stroke-width="1.4"/>
+          </svg>
+        </div>
         <div class="viewer-title-block">
           <div class="tennla-brand">
             <span class="tennla-seal" aria-hidden="true"></span>
             <div>
+              <span class="tennla-overline">Хроники солнечных земель</span>
               <span class="tennla-mark">Теннла</span>
               <h1><span class="tennla-system" aria-hidden="true">Mythras · </span>{{activeSection === 'play' ? 'Лист персонажа' : (character?.name || 'Лист персонажа')}}</h1>
             </div>
@@ -292,6 +303,7 @@
             </aside>
             <div class="character-home">
             <header class="hero-panel">
+              <div class="hero-eyebrow" aria-hidden="true">✦ &nbsp; ЛИСТ ПУТЕШЕСТВЕННИКА &nbsp; · &nbsp; MYTHRAS</div>
               <div class="hero-identity">
                 <div class="hero-portrait">
                   <img *ngIf="portraitSource as source; else portraitFallback" [src]="source" alt="Портрет персонажа" (error)="onPortraitError()" />
