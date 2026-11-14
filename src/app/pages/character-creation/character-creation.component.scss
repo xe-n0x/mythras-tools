@@ -378,3 +378,19 @@
 @media(max-width:959px) {
   .creation-sidebar { position: static; }
 }
+
+/* Tennla editor: keep every step readable on the dark sidebar. */
+.creation-sidebar .step-list-item:not(.active) {
+  color: #f5f4e9;
+}
+.creation-sidebar .step-list-item.active {
+  color: #193e46;
+}
+.creation-sidebar .step-list-item .step-name {
+  color: inherit;
+  opacity: 1;
+}
+.creation-sidebar .step-list-item:not(.active) .step-index {
+  color: #f5e6cb;
+  border-color: #e2d4b5;
+}

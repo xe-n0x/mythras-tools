@@ -1,3 +1,4 @@
+import { DismissOnBackdropDirective } from '../../directives/dismiss-on-backdrop.directive';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -11,7 +12,7 @@ import { sheetEffectImpact, sheetRuleRef, sheetRu } from '../../services/sheet-l
 @Component({
   standalone: true,
   selector: 'app-character-effects',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DismissOnBackdropDirective],
   templateUrl: './character-effects.component.html',
   styleUrls: ['./character-effects.component.scss'],
 })

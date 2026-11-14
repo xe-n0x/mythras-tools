@@ -1,5 +1,5 @@
 <button class="action" type="button" aria-haspopup="dialog" (click)="open(panel)">Развитие персонажа</button>
-<dialog #panel aria-labelledby="advancement-title" (close)="discard()">
+<dialog appDismissOnBackdrop #panel aria-labelledby="advancement-title" (close)="discard()">
   <header>
     <h2 id="advancement-title">Развитие персонажа</h2>
     <button class="action" type="button" (click)="panel.close()">Закрыть</button>

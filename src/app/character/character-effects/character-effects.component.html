@@ -9,7 +9,7 @@
     </li>
   </ul>
 </section>
-<dialog #manageEffects class="choice-dialog" [attr.aria-label]="location ? 'Эффекты части тела' : 'Эффекты и состояния'" (close)="cancel()">
+<dialog appDismissOnBackdrop #manageEffects class="choice-dialog" [attr.aria-label]="location ? 'Эффекты части тела' : 'Эффекты и состояния'" (close)="cancel()">
   <header>
     <h3>{{location ? 'Эффекты части тела' : 'Эффекты и состояния'}}</h3>
     <button class="choice-action" type="button" (click)="manageEffects.close()">Закрыть</button>

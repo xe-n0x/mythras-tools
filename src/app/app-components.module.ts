@@ -1,4 +1,5 @@
 import { A11yModule } from '@angular/cdk/a11y';
+import { DismissOnBackdropDirective } from './directives/dismiss-on-backdrop.directive';
 import { SkillActionsComponent } from './character/skill-actions/skill-actions.component';
 import { CustomizationComponent } from './character/customization/customization.component';
 import { AgeExperienceModalComponent } from './character/modals/age-experience/age-experience.component';
@@ -323,6 +324,7 @@ import { RouterModule } from '@angular/router';
   ],
   imports: [
     A11yModule,
+    DismissOnBackdropDirective,
     CharacterHealthComponent,
     CharacterAdvancementComponent,
     CharacterEffectsComponent,

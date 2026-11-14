@@ -1,3 +1,4 @@
+import { DismissOnBackdropDirective } from '../../directives/dismiss-on-backdrop.directive';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -17,7 +18,7 @@ type Mode = 'experience' | 'training' | 'manual';
 @Component({
   selector: 'app-character-advancement',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DismissOnBackdropDirective],
   templateUrl: './character-advancement.component.html',
   styleUrls: ['./character-advancement.component.scss'],
 })
