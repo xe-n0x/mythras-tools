@@ -1,13 +1,37 @@
 <div class="app-shell tennla-shell" lang="ru">
   <div class="tennla-margins" aria-hidden="true">
-    <span class="tennla-edge tennla-edge-sun" lang="el">ΦΩΣ</span>
-    <span class="tennla-edge tennla-edge-sea" lang="el">ΘΑΛΑΣΣΑ</span>
+    <div class="tennla-margin tennla-margin-west">
+      <span lang="el">ΦΩΣ · ΠΟΛΙΣ</span>
+      <svg viewBox="0 0 60 208" fill="none" stroke="currentColor" focusable="false">
+        <path class="tennla-borderwork" d="M12 2v76m36-76v76M23 2h14v14H23v-7h7m7 14H23v14h14v-7h-7m-7 14h14v14H23v-7h7m7 14H23v14h14v-7h-7M30 86v24m0 63v30"/>
+        <g class="tennla-emblem">
+          <circle cx="30" cy="142" r="24"/>
+          <path d="M30 121l21 21-21 21-21-21zM30 128l14 14-14 14-14-14z"/>
+          <circle cx="30" cy="142" r="3"/>
+        </g>
+      </svg>
+      <img class="tennla-fresco" src="assets/tennla/solar-city.svg" alt="" width="180" height="340">
+    </div>
+    <div class="tennla-margin tennla-margin-east">
+      <svg viewBox="0 0 120 320" fill="none" stroke="currentColor" focusable="false">
+        <g class="tennla-emblem">
+          <circle cx="60" cy="78" r="45"/>
+          <circle cx="60" cy="78" r="34"/>
+          <circle cx="60" cy="78" r="17"/>
+          <path d="M60 21v23m0 68v23M3 78h23m68 0h23M20 38l16 16m48 48l16 16m0-80L84 54m-48 48l-16 16"/>
+          <path d="M60 69l9 9-9 9-9-9z"/>
+        </g>
+        <path class="tennla-borderwork" d="M60 142v32m-7 12h14m-30 11h46m-46 80h46m-39-73v66m8-66v66m16-66v66m8-66v66m-46 14h60m-30 10l5 5-5 5-5-5z"/>
+      </svg>
+      <img class="tennla-fresco" src="assets/tennla/sea-voyage.svg" alt="" width="180" height="340">
+      <span lang="el">ΘΑΛΑΣΣΑ</span>
+    </div>
   </div>
   <div class="app-container page">
     <div class="viewer-shell">
       <header class="app-page-header viewer-header">
         <div class="tennla-header-engraving" aria-hidden="true">
-          <svg viewBox="0 0 520 170" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor">
+          <svg viewBox="-8 0 520 170" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" focusable="false">
             <circle cx="252" cy="86" r="58" stroke-width="1.2"/>
             <circle cx="252" cy="86" r="44" stroke-width=".8"/>
             <circle cx="252" cy="86" r="20" stroke-width="1.2"/>
@@ -30,7 +54,9 @@
         <div class="viewer-actions">
           <button type="button" class="home-link" (click)="openFreeRoll(freeDiceDialog)">Кубики</button>
           <button type="button" class="home-link" (click)="historyDialog.showModal()">История</button>
-          <details class="sheet-tools"><summary>Действия</summary><div class="sheet-tool-actions"><button mat-stroked-button (click)="editCharacter()">Редактировать персонажа</button><button mat-stroked-button routerLink="/view">PDF и печать</button><button mat-stroked-button (click)="download()">Скачать резервную копию JSON</button><button mat-stroked-button routerLink="/menu">Библиотека персонажей</button></div></details>
+          <app-character-advancement *ngIf="character as hero" [character]="hero" [saveError]="advancementError"
+            (opened)="advancementError = ''" (applyDraft)="applyCharacterAdvancement($event)"></app-character-advancement>
+          <details #sheetTools class="sheet-tools"><summary #sheetToolsTrigger>Действия</summary><div class="sheet-tool-actions"><button mat-stroked-button (click)="editCharacter()">Редактировать персонажа</button><button mat-stroked-button routerLink="/view">PDF и печать</button><button mat-stroked-button (click)="download()">Скачать резервную копию JSON</button><button mat-stroked-button routerLink="/menu">Библиотека персонажей</button></div></details>
         </div>
       </header>
       <dialog #ruleDialog class="choice-dialog" aria-labelledby="rule-preview-title" (close)="rulePreview = undefined">
@@ -69,6 +95,68 @@
           </ng-container>
           <p class="loadout-message" *ngIf="weaponMessage" role="alert">{{ru(weaponMessage)}}</p>
         </ng-container>
+      </dialog>
+      <dialog #skillDialog class="skill-dialog" aria-labelledby="skill-check-title" (close)="closeSkillCheck()">
+        <div *ngIf="selectedCheck as skill">
+          <header class="panel-heading"><h2 id="skill-check-title">{{ru(skill.name)}}</h2><button type="button" class="home-link" (click)="skillDialog.close()">Закрыть</button></header>
+          <p *ngIf="skillRoller.result" class="field-hint">Настройки для нового броска. Переброс использует условия предыдущего.</p>
+          <div class="check-options">
+            <label>Шкала сложности
+              <select [ngModel]="difficultySystem" (ngModelChange)="setDifficultySystem($event)">
+                <option value="standard">Основная</option>
+                <option value="simplified">Упрощённая (опциональная)</option>
+              </select>
+            </label>
+            <label>Сложность
+              <select [(ngModel)]="difficultyGrade"><option *ngFor="let grade of difficultyGrades" [value]="grade">{{ru(grade)}}</option></select>
+            </label>
+          </div>
+          <p *ngIf="!skillRoller.result" class="check-target" aria-live="polite">
+            <span *ngIf="checkGrade !== difficultyGrade">{{ru(checkGrade)}} имеет приоритет · </span>
+            <ng-container *ngIf="checkTarget !== null; else specialGrade">Цель <strong>{{checkTarget | number:'1.0-4'}}%</strong></ng-container>
+            <ng-template #specialGrade>{{checkGrade === 'Automatic' ? 'Автоматический успех' : 'Попытка невозможна'}}</ng-template>
+          </p>
+          <p class="field-hint" *ngIf="fatigue.restricted">{{ru(fatigue.restricted)}}</p>
+          <ul class="check-sources" *ngIf="localCheckRestrictions.length">
+            <li *ngFor="let restriction of localCheckRestrictions">{{ru(restriction.name)}} · {{ru(locationLabel(restriction.location || ''))}}
+              · {{displayEffectImpact(restriction)}} · {{ruleRef(restriction.source)}}</li>
+          </ul>
+          <app-dice-roller #skillRoller [check]="rollCheckContext" [animate]="animateDice"
+            (animateChange)="setDiceAnimation($event)" (rolled)="recordDiceRoll($event)"></app-dice-roller>
+          <details class="check-details">
+            <summary>Как рассчитана проверка</summary>
+            <p class="field-hint">Core Rules, навыки и сложность, с. 37–38. На d100 результат 01–05 означает успех, а 96–00 — провал.</p>
+            <ng-container *ngIf="skillRoller.result?.check as applied; else proposalDetails">
+              <p>Значение до модификаторов {{applied.original}}% · после модификаторов {{applied.effective}}% · шкала {{ru(applied.system)}}</p>
+              <ul class="check-sources" *ngIf="applied.modifiers.length">
+                <li *ngFor="let modifier of applied.modifiers">{{ru(modifier.name)}} · {{modifierText(ru(modifier.impact))}} · {{ruleRef(modifier.source)}}</li>
+              </ul>
+            </ng-container>
+            <ng-template #proposalDetails><ng-container *ngIf="checkValues as values">
+            <dl class="check-totals">
+              <div><dt>Записанное значение</dt><dd>{{values.original}}%</dd></div>
+              <div><dt>Записанная база</dt><dd>{{values.base}}%</dd></div>
+              <div><dt>База с эффектами</dt><dd>{{values.effectiveBase}}%</dd></div>
+              <div><dt>Итог до сложности</dt><dd>{{values.effective}}%</dd></div>
+            </dl>
+            <dl class="calculation-lines">
+              <div><dt>Действующие характеристики</dt><dd><span *ngFor="let input of values.inputs">{{input.key}} {{input.value}} · </span>
+                <span *ngIf="skill.multiply">× {{skill.multiply}} </span><span *ngIf="skill.divide">÷ {{skill.divide}} (округление вверх) </span>
+                <span *ngIf="skill.add">Поправка {{skill.add}}</span></dd></div>
+              <div *ngIf="skill.cultureBonus"><dt>Бонус культуры</dt><dd>{{skill.cultureBonus}}</dd></div>
+              <div *ngIf="skill.careerBonus"><dt>Бонус профессии</dt><dd>{{skill.careerBonus}}</dd></div>
+              <div *ngIf="skill.extraBonus"><dt>Сохранённая поправка</dt><dd>{{skill.extraBonus}} · источник неизвестен</dd></div>
+            </dl>
+            <ul class="check-sources" *ngIf="values.effects.length || fatigue.grade">
+              <li *ngFor="let entry of values.effects" [class.effect-conflict]="entry.blocked">
+                {{ru(entry.effect.name)}} · {{displayEffectImpact(entry.effect)}} · {{ruleRef(entry.effect.source)}}
+                <strong *ngIf="entry.blocked">Конфликт: модификатор приостановлен</strong>
+              </li>
+              <li *ngIf="fatigue.grade">Усталость · {{ru(fatigue.grade)}} · Core Rules, с. 79</li>
+            </ul>
+            </ng-container></ng-template>
+          </details>
+        </div>
       </dialog>
       <dialog #freeDiceDialog class="skill-dialog" aria-labelledby="free-dice-title" (close)="freeRollOpen = false">
         <header class="panel-heading">
@@ -132,7 +220,6 @@
       <nav class="section-nav" aria-label="Разделы листа персонажа">
         <button
           *ngFor="let section of sections"
-          mat-stroked-button
           [class.is-active]="activeSection === section.key"
           [attr.aria-current]="activeSection === section.key ? 'true' : null"
           (click)="setSection(section.key)"
@@ -141,6 +228,12 @@
           {{ ru(section.label) }}
         </button>
       </nav>
+      <div class="mobile-play-actions" *ngIf="character && activeSection === 'play'">
+        <button #mobileSkillTrigger type="button" aria-controls="session-skills" [attr.aria-expanded]="mobileSkills" (click)="openMobileSkills()">Навыки</button>
+        <button type="button" (click)="goToPlayPanel('#play-health')">Здоровье</button>
+        <button type="button" (click)="goToPlayPanel('#combat-equipment-title')">Снаряжение</button>
+        <button type="button" (click)="goToPlayPanel('#play-effects')">Эффекты</button>
+      </div>
 
       <p class="save-status" role="status">{{ru(storage.error) || "Изменения сохраняются на этом устройстве автоматически."}}</p>
 
@@ -198,13 +291,18 @@
       <ng-template #combatEquipment>
         <section class="play-panel sheet-block combat-equipment" aria-labelledby="combat-equipment-title">
           <header class="panel-heading">
-            <h2 id="combat-equipment-title">Боевые стили и снаряжение</h2>
+            <h2 id="combat-equipment-title" tabindex="-1">Боевые стили и снаряжение</h2>
             <a class="home-link" routerLink="/combat">Бой</a>
             <button class="home-link" type="button" (click)="setSection('extras', 'customization')">Настроить снаряжение и стили</button>
           </header>
           <div class="player-card-grid combat-styles-grid" *ngIf="getCombatStyles().length">
           <article class="player-card" *ngFor="let style of getCombatStyles()">
-            <header><h3>{{style.name}}</h3><strong class="skill-score">{{sessionCheckLabel(style)}}</strong></header>
+            <header>
+              <h3>{{style.name}}</h3>
+              <button type="button" class="choice-action skill-score" aria-haspopup="dialog"
+                [attr.aria-label]="'Проверить боевой стиль: ' + style.name"
+                (click)="openSkillCheck(style, skillDialog)">{{sessionCheckLabel(style)}}</button>
+            </header>
             <p class="weapon-description">{{getStyleWeaponText(style) || 'Оружие не указано'}}</p>
             <p *ngIf="style.selectedTrait as trait"><button type="button" class="home-link" (click)="openRule(trait.name || 'Особенность', [trait.trait], ruleDialog, style.source)">{{trait.name || 'Правила особенности'}}</button></p>
             <details><summary>Изменить значение</summary><label>Итог навыка <input type="number" [attr.aria-label]="'Итог: ' + style.name" [value]="getStoredSkill(style)" (change)="setSkill(style,$event)"></label></details>
@@ -276,20 +374,22 @@
           </div>
         </section>
       </ng-template>
-      <section #sectionPanel tabindex="-1" class="section-card" [ngSwitch]="activeSection">
+      <section #sectionPanel class="section-card" [ngSwitch]="activeSection">
         <ng-container *ngSwitchCase="'play'">
           <div *ngIf="character as hero" class="character-workspace" [class.show-mobile-skills]="mobileSkills">
-            <button type="button" class="mobile-skill-switch" aria-controls="session-skills" [attr.aria-expanded]="mobileSkills" (click)="mobileSkills = !mobileSkills">{{mobileSkills ? 'Вернуться к персонажу' : 'Открыть навыки'}}</button>
-            <aside id="session-skills" class="play-panel session-skills" aria-labelledby="session-skills-title">
+            <div *ngIf="mobileSkills" class="skill-drawer-backdrop" aria-hidden="true" (click)="closeMobileSkills()" (pointerdown)="$event.preventDefault()"></div>
+            <aside id="session-skills" class="play-panel session-skills" aria-labelledby="session-skills-title"
+              [cdkTrapFocus]="mobileSkills" [attr.role]="mobileSkills ? 'dialog' : null" [attr.aria-modal]="mobileSkills ? 'true' : null">
               <header class="panel-heading">
                 <h2 id="session-skills-title">Навыки</h2>
+                <button type="button" class="close-skill-drawer" (click)="closeMobileSkills()">Закрыть</button>
                 <button type="button" class="home-link" (click)="setSection('attributes', 'skills')">Редактировать навыки</button>
               </header>
-              <input type="search" aria-label="Поиск навыков персонажа" placeholder="Поиск навыков" [(ngModel)]="skillQuery" />
+              <input #skillSearch type="search" aria-label="Поиск навыков персонажа" placeholder="Поиск навыков" [(ngModel)]="skillQuery" />
               <ng-container *ngIf="skillGroups as groups">
                 <section *ngFor="let group of groups; trackBy: trackSkillGroup">
                   <h3>{{group.name === 'Standard' ? 'Стандартные' : 'Профессиональные'}}</h3>
-                  <ul class="session-skill-list">
+                  <ul class="session-skill-list" *ngIf="group.skills.length">
                     <li *ngFor="let skill of group.skills">
                       <button type="button" (click)="openSkillCheck(skill, skillDialog)">
                         <span>{{ru(skill.name)}}</span><strong>{{sessionCheckLabel(skill)}}</strong>
@@ -310,7 +410,7 @@
                   <ng-template #portraitFallback><span aria-hidden="true">{{initials}}</span></ng-template>
                 </div>
                 <div class="hero-name">
-                  <h2 *ngIf="nameDraft === null; else rename">
+                  <h2 *ngIf="nameDraft === null; else rename" data-section-focus tabindex="-1">
                     <button #nameTrigger class="edit-name" type="button" [attr.aria-label]="'Изменить имя: ' + (hero.name || 'Безымянный персонаж')" (click)="nameDraft = hero.name || ''">
                       <span>{{hero.name || 'Безымянный персонаж'}}</span>
                       <mat-icon aria-hidden="true">edit</mat-icon>
@@ -355,74 +455,22 @@
                   (click)="showAttribute(item.key, calculationDialog)">{{ru(item.label)}}</button>
               </details>
               </section>
-                <app-character-effects [effects]="sessionEffects" [skills]="effectSkills" [character]="hero"
+                <app-character-effects id="play-effects" tabindex="-1" [effects]="sessionEffects" [skills]="effectSkills" [character]="hero"
                   (effectsChange)="setEffects($event)"></app-character-effects>
                 <ng-container *ngTemplateOutlet="jumpFields"></ng-container>
               </div>
-              <app-character-health [locations]="healthLocations" [humanoid]="humanoidHealth"
+              <app-character-health id="play-health" tabindex="-1" [locations]="healthLocations" [humanoid]="humanoidHealth"
                 [effects]="sessionEffects" [skills]="effectSkills" [character]="hero" (effectsChange)="setEffects($event)"
-                (inspectHp)="showHp($event, calculationDialog)" (hpChange)="editHealth($event)" (restoreHp)="restoreHealth($event)" (injuryChange)="editInjury($event)"></app-character-health>
+                (inspectHp)="showHp($event, calculationDialog)" (hpChange)="editHealth($event)" (hpAdjustment)="adjustHealth($event)"
+                (restoreHp)="restoreHealth($event)" (injuryChange)="editInjury($event)"></app-character-health>
             </div>
             <ng-container *ngTemplateOutlet="combatEquipment"></ng-container>
             </div>
-            <dialog #skillDialog class="skill-dialog" aria-labelledby="skill-check-title" (close)="selectedCheck = undefined">
-              <div *ngIf="selectedCheck as skill">
-                <header class="panel-heading"><h2 id="skill-check-title">{{ru(skill.name)}}</h2><button type="button" class="home-link" (click)="skillDialog.close()">Закрыть</button></header>
-                <ng-container *ngIf="checkValues as values">
-                  <dl class="check-totals">
-                    <div><dt>Записанное значение</dt><dd>{{values.original}}%</dd></div>
-                    <div><dt>Записанная база</dt><dd>{{values.base}}%</dd></div>
-                    <div><dt>База с эффектами</dt><dd>{{values.effectiveBase}}%</dd></div>
-                    <div><dt>Итог до сложности</dt><dd>{{values.effective}}%</dd></div>
-                  </dl>
-                  <dl class="calculation-lines">
-                    <div><dt>Действующие характеристики</dt><dd><span *ngFor="let input of values.inputs">{{input.key}} {{input.value}} · </span>
-                      <span *ngIf="skill.multiply">× {{skill.multiply}} </span><span *ngIf="skill.divide">÷ {{skill.divide}} (округление вверх) </span>
-                      <span *ngIf="skill.add">Поправка {{skill.add}}</span></dd></div>
-                    <div *ngIf="skill.cultureBonus"><dt>Бонус культуры</dt><dd>{{skill.cultureBonus}}</dd></div>
-                    <div *ngIf="skill.careerBonus"><dt>Бонус профессии</dt><dd>{{skill.careerBonus}}</dd></div>
-                    <div *ngIf="skill.extraBonus"><dt>Сохранённая поправка</dt><dd>{{skill.extraBonus}} · источник неизвестен</dd></div>
-                  </dl>
-                  <ul class="check-sources" *ngIf="values.effects.length || fatigue.grade">
-                    <li *ngFor="let entry of values.effects" [class.effect-conflict]="entry.blocked">
-                      {{ru(entry.effect.name)}} · {{displayEffectImpact(entry.effect)}} · {{ruleRef(entry.effect.source)}}
-                      <strong *ngIf="entry.blocked">Конфликт: модификатор приостановлен</strong>
-                    </li>
-                    <li *ngIf="fatigue.grade">Усталость · {{ru(fatigue.grade)}} · Core Rules, с. 79</li>
-                  </ul>
-                </ng-container>
-                <div class="check-options">
-                  <label>Шкала сложности
-                    <select [ngModel]="difficultySystem" (ngModelChange)="setDifficultySystem($event)">
-                      <option value="standard">Основная</option>
-                      <option value="simplified">Упрощённая (опциональная)</option>
-                    </select>
-                  </label>
-                  <label>Сложность
-                    <select [(ngModel)]="difficultyGrade"><option *ngFor="let grade of difficultyGrades" [value]="grade">{{ru(grade)}}</option></select>
-                  </label>
-                </div>
-                <p class="check-target" aria-live="polite">
-                  <span *ngIf="checkGrade !== difficultyGrade">{{ru(checkGrade)}} имеет приоритет · </span>
-                  <ng-container *ngIf="checkTarget !== null; else specialGrade">Цель <strong>{{checkTarget | number:'1.0-4'}}%</strong></ng-container>
-                  <ng-template #specialGrade>{{checkGrade === 'Automatic' ? 'Автоматический успех' : 'Попытка невозможна'}}</ng-template>
-                </p>
-                <p class="field-hint">Core Rules, навыки и сложность, с. 37–38</p>
-                <p class="field-hint" *ngIf="fatigue.restricted">{{ru(fatigue.restricted)}}</p>
-                <p class="field-hint" *ngIf="checkTarget !== null">На d100 результат 01–05 всегда означает успех, а 96–00 — провал (с. 37).</p>
-                <ul class="check-sources" *ngIf="localCheckRestrictions.length">
-                  <li *ngFor="let restriction of localCheckRestrictions">{{ru(restriction.name)}} · {{ru(locationLabel(restriction.location || ''))}}
-                    · {{displayEffectImpact(restriction)}} · {{ruleRef(restriction.source)}}</li>
-                </ul>
-                <app-dice-roller [check]="rollCheckContext" [animate]="animateDice"
-                  (animateChange)="setDiceAnimation($event)" (rolled)="recordDiceRoll($event)"></app-dice-roller>
-              </div>
-            </dialog>
           </div>
         </ng-container>
         <div *ngSwitchCase="'attributes'" class="sheet-stack">
           <section class="play-panel sheet-block">
-            <h2>Характеристики</h2>
+            <h2 data-section-focus tabindex="-1">Характеристики</h2>
             <button type="button" class="home-link" [attr.aria-pressed]="editingBaseCharacteristics" (click)="editingBaseCharacteristics = !editingBaseCharacteristics">
               {{editingBaseCharacteristics ? 'Изменить текущие значения' : 'Изменить базу'}}
             </button>
@@ -457,8 +505,8 @@
           </section>
           </div>
           <ng-container *ngTemplateOutlet="jumpFields"></ng-container>
-        <section class="play-panel sheet-block" data-section-target="skills" tabindex="-1">
-          <h2>Навыки</h2><label class="sheet-search">Найти стандартный или профессиональный навык<input type="search" aria-label="Найти навык" [(ngModel)]="skillQuery" placeholder="Восприятие, Уклонение, Знание…"></label><p *ngIf="skillQuery" class="skill-filter-status" role="status">{{getSessionStandardSkills().length + getSessionProfessionalSkills().length}} — найдено навыков <button mat-button (click)="skillQuery=''">Очистить поиск</button></p>
+        <section class="play-panel sheet-block" data-section-target="skills">
+          <h2 data-section-focus tabindex="-1">Навыки</h2><label class="sheet-search">Найти стандартный или профессиональный навык<input type="search" aria-label="Найти навык" [(ngModel)]="skillQuery" placeholder="Восприятие, Уклонение, Знание…"></label><p *ngIf="skillQuery" class="skill-filter-status" role="status">{{getSessionStandardSkills().length + getSessionProfessionalSkills().length}} — найдено навыков <button mat-button (click)="skillQuery=''">Очистить поиск</button></p>
           <div class="skills-columns">
             <div class="section-block">
               <h3>Стандартные навыки</h3>
@@ -613,7 +661,10 @@
                       />
                     </td>
                     <td>
-                      {{ ensurePassion(row).modifier || getPassionModifierText(ensurePassion(row).objectOfPassion) || '-' }}
+                      <label>Текущее значение, %<input type="number" min="0" step="1"
+                        [attr.aria-label]="'Процент страсти ' + (row + 1)"
+                        [value]="ensurePassion(row).modifierNumber ?? ''" (change)="setPassionRating(row, $event)"></label>
+                      <small>{{ ensurePassion(row).modifier || getPassionModifierText(ensurePassion(row).objectOfPassion) }}</small>
                     </td>
                   </tr>
                 </tbody>
@@ -625,7 +676,31 @@
         <div *ngSwitchCase="'extras'" class="sheet-stack">
           <div class="extras-grid">
         <section class="play-panel sheet-block">
-          <h2>Магия</h2>
+          <h2 data-section-focus tabindex="-1">Магия</h2>
+          <ng-container *ngIf="sorcerySkills('Shaping') as shaping">
+            <ng-container *ngIf="sorcerySkills('Invocation') as invocations">
+              <section class="section-block" *ngIf="shaping.length || invocations.length || character!.sorceryOrder?.name || character!.magic.sorcery.length">
+                <h3>Формирование заклинаний</h3>
+                <div class="overview-grid">
+                  <label *ngIf="shaping.length > 1">Навык формирования
+                    <select [(ngModel)]="shapingChoice"><option [ngValue]="null">Выберите навык</option>
+                      <option *ngFor="let skill of shaping; index as i" [ngValue]="skill">{{ru(skill.name)}} · {{i + 1}}</option>
+                    </select>
+                  </label>
+                  <label *ngIf="invocations.length > 1">Навык призывания
+                    <select [(ngModel)]="invocationChoice"><option [ngValue]="null">Выберите навык</option>
+                      <option *ngFor="let skill of invocations; index as i" [ngValue]="skill">{{ru(skill.name)}} · {{i + 1}}</option>
+                    </select>
+                  </label>
+                </div>
+                <p *ngIf="chosenSorcerySkill(shaping, shapingChoice) as skill"><strong>{{shapingPoints(skill)}}</strong> очков формирования</p>
+                <p class="field-hint" *ngIf="!shaping.length">У персонажа нет изученного навыка Shaping.</p>
+                <p class="field-hint">Одна десятая действующего Shaping, с округлением вверх. Shaping задаёт лимит. Для произнесения заклинания проверяется Invocation. Core Rules, с. 161–162, 165.</p>
+                <button *ngIf="chosenSorcerySkill(invocations, invocationChoice) as skill" type="button" class="choice-action"
+                  (click)="openSkillCheck(skill, skillDialog)">Проверить {{ru(skill.name)}}</button>
+              </section>
+            </ng-container>
+          </ng-container>
           <label class="sheet-search">Найти заклинание или способность<input type="search" [(ngModel)]="magicQuery" placeholder="Название, традиция, метка или правила…" aria-label="Найти заклинание или способность"></label>
           <div class="player-card-grid">
             <article class="player-card magic-card" *ngFor="let spell of getMagicEntries(); trackBy: trackMagicEntry"><span class="magic-tradition">{{ru(spell.tradition)}}</span><h3>{{spell.name}}</h3><p class="weapon-description">{{spell.tags}}</p><details *ngIf="spell.description"><summary>Показать правила</summary><p class="spell-rules">{{spell.description}}</p></details></article>
@@ -696,8 +771,8 @@
           </details>
         </section>
           </div>
-        <details class="play-panel sheet-block extra-disclosure" data-section-target="profile" tabindex="-1">
-          <summary>Профиль, деньги и ресурсы</summary>
+        <details class="play-panel sheet-block extra-disclosure" data-section-target="profile">
+          <summary data-section-focus>Профиль, деньги и ресурсы</summary>
           <div class="overview-grid">
             <label><strong>Игрок</strong><input [(ngModel)]="character!.player" /></label>
             <label><strong>Персонаж</strong><input [(ngModel)]="character!.name" /></label>
@@ -728,8 +803,8 @@
             </div>
           </div>
         </details>
-          <details class="play-panel sheet-block extra-disclosure" data-section-target="customization" tabindex="-1">
-            <summary>Дополнительные настройки</summary>
+          <details class="play-panel sheet-block extra-disclosure" data-section-target="customization">
+            <summary data-section-focus>Дополнительные настройки</summary>
             <app-customization [russian]="true" [character]="character!"></app-customization>
           </details>
         </div>

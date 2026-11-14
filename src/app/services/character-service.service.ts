@@ -136,19 +136,23 @@ export function initSkills(skills: CharacterSkills) {
 //         baseOps.add || baseOps.multiply ? '.setOperations('+JSON.stringify(baseOps)+')' : ''
 //     )+');';
 //         }).join('\n'))
-export function getSkillTotal(character: Character, skill: Skill): number {
+export function getSkillTotal(character: Character, skill: Skill, includeExtra = true, legacyRounding = false): number {
   if (!hasSkills(character, skill.base)) return 0;
   const chosenExtra = [...(character.skills.extraProfessionalCultureSkills || []), ...(character.skills.extraProfessionalCareerSkills || [])].some(s => s.name === skill.name);
   if (skill.professional && !skill.force && !skill.cultureBonus && !skill.careerBonus && !skill.extraBonus && skill !== character.skills.hobby && !chosenExtra) return 0;
-  return (
-    getSkillBase(character, skill) +
+  const total =
+    rawSkillBase(character, skill, legacyRounding) +
     orZero(skill.cultureBonus) +
     orZero(skill.careerBonus) +
-    orZero(skill.extraBonus)
-  );
+    (includeExtra ? orZero(skill.extraBonus) : 0);
+  return legacyRounding ? total : Math.floor(total);
 }
 
 export function getSkillBase(character: Character, skill: Skill): number {
+  return Math.floor(rawSkillBase(character, skill));
+}
+
+function rawSkillBase(character: Character, skill: Skill, legacyRounding = false): number {
   if (!hasSkills(character, skill.base)) return 0;
   let total = 0;
 
@@ -158,7 +162,14 @@ export function getSkillBase(character: Character, skill: Skill): number {
 
   if (skill.multiply) total *= skill.multiply;
 
-  if (skill.divide) total = Math.ceil(total / skill.divide);
+  // These divisions index the printed attribute/HP tables (pp. 8–10).
+  const tableLookup = [character.skills.ap, character.skills.expMod, character.skills.healing,
+    character.skills.luck].includes(skill) || (skill.divide === 5 && skill.base.length === 2 &&
+      skill.base.includes('con') && skill.base.includes('siz') && Object.values(character.hp ?? {}).includes(skill));
+  if (skill.divide) {
+    total /= skill.divide;
+    if (legacyRounding || tableLookup) total = Math.ceil(total);
+  }
 
   if (skill.add) total += Number(skill.add) || 0;
 
@@ -186,6 +197,10 @@ function hasSkills(character: Character, attr: string[]) {
     if ((character.skills as any)[a] == undefined) return false;
   }
   return true;
+}
+
+export function hasSkillCharacteristics(character: Character, skill: Skill): boolean {
+  return hasSkills(character, skill.base);
 }
 
 export function getStandardCulturalSkills(character: Character): Skill[] {
@@ -305,7 +320,7 @@ function getIncludedSkills(character: Character, ...skills: string[]): Skill[] {
 export function getMoneyAfterClass(character: Character) {
   if (!character.socialClass || !character.socialClass.moneyMultiplier)
     return Number(character.startingMoney) || 0;
-  return character.socialClass.moneyMultiplier * (Number(character.startingMoney) || 0);
+  return Math.floor(character.socialClass.moneyMultiplier * (Number(character.startingMoney) || 0));
 }
 
 export function getTotalFromItems(
@@ -314,7 +329,7 @@ export function getTotalFromItems(
   halfWorn?: boolean,
   onlyArmor?: boolean
 ): number {
-  return Object.keys(character.equipment)
+  return Math.floor(Object.keys(character.equipment)
     .map((k) => {
       if(['equipmentEnc',
         'armourEnc',
@@ -347,7 +362,7 @@ export function getTotalFromItems(
           : 1)
       );
     })
-    .reduce((a, b) => a + b);
+    .reduce((a, b) => a + b));
 }
 
 export function getOnlyArmor(

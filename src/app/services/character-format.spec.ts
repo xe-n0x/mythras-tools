@@ -61,6 +61,7 @@ describe('Legacy character compatibility', () => {
         const character = hydrateCharacter(legacy());
         expect(getSkillTotal(character, character.skills.ap)).toBe(3);
         expect(getSkillTotal(character, character.skills.init)).toBe(15);
+        expect(getSkillTotal(hydrateCharacter({skills: { int: 15, dex: 14 }}), character.skills.init)).toBe(14);
         expect(getSkillTotal(character, character.skills.luck)).toBe(2);
         expect(getSkillTotal(character, character.hp.head)).toBe(5);
         expect(getSkillTotal(character, character.hp.chest)).toBe(7);

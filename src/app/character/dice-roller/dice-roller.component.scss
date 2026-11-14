@@ -30,10 +30,12 @@
 }
 .roll-button { justify-self: start; }
 .roll-button:hover { background: #234b56; }
-.new-roll { background: transparent; color: var(--sheet-accent, #305d69); margin-top: 6px; }
+.new-roll { background: transparent; color: var(--sheet-accent, #305d69); }
+.result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 6px; }
 .new-roll:hover { background: var(--sheet-sea-wash, #e9f0f1); }
 .dice-result { display: grid; justify-items: center; gap: 4px; padding-top: 8px; text-align: center; }
 .dice-result p { margin: 0; }
+.roll-target { padding: 5px 9px; border-radius: 4px; color: var(--sheet-accent); background: var(--sheet-sea-wash); }
 .roll-origin, .roll-breakdown { color: var(--sheet-muted); overflow-wrap: anywhere; }
 .dice-faces { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding-block: 5px; }
 .die {

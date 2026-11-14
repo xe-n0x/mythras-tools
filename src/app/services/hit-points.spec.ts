@@ -1,6 +1,41 @@
 import { hydrateCharacter } from './character-format';
 import { getCurrentHp, getHitLocations, setCurrentHp, getMaximumHp, HIT_LOCATIONS, usesHumanoidBodyMap } from './hit-points';
-import { editCurrentHp, getLocationInjury, getWoundSeverity, initializeCurrentHp, setLocationInjury } from './hit-points';
+import { adjustedLocationHp, editCurrentHp, getLocationInjury, getWoundSeverity, initializeCurrentHp, setLocationInjury } from './hit-points';
+
+describe('Humanoid hit locations (Core Rules p. 109)', () => {
+  it('covers each d20 outcome exactly once and preserves anatomical sides', () => {
+    expect(HIT_LOCATIONS.map(({key}) => key)).toEqual(['head', 'leftArm', 'rightArm', 'chest', 'abdoment', 'leftLeg', 'rightLeg']);
+    const expected = ['rightLeg', 'rightLeg', 'rightLeg', 'leftLeg', 'leftLeg', 'leftLeg', 'abdoment', 'abdoment', 'abdoment',
+      'chest', 'chest', 'chest', 'rightArm', 'rightArm', 'rightArm', 'leftArm', 'leftArm', 'leftArm', 'head', 'head'] as const;
+    expected.forEach((key, index) => {
+      expect(HIT_LOCATIONS.filter(({range}) => {
+        const [from, to] = range.split('–').map(Number);
+        return from <= index + 1 && index + 1 <= to;
+      }).map(location => location.key)).withContext('d20 = ' + (index + 1)).toEqual([key]);
+    });
+    const griffin = hydrateCharacter({species: 'Griffin', hp: {head: 5, wing: 4}});
+    expect(getHitLocations(griffin).map(location => location.range)).toEqual([undefined, undefined]);
+  });
+});
+
+describe('HP adjustment', () => {
+  it('subtracts recorded damage even above the current maximum and below zero', () => {
+    const hero = hydrateCharacter({skills:{con:10,siz:10},currentHitPoints:{head:9,chest:0}});
+    expect(adjustedLocationHp(hero,'head',1,'damage')).toBe(8);
+    expect(adjustedLocationHp(hero,'chest',2,'damage')).toBe(-2);
+    expect(adjustedLocationHp(hero,'leftArm',1,'damage')).toBeUndefined();
+    expect(adjustedLocationHp(hero,'head',-1,'damage')).toBeUndefined();
+    expect(adjustedLocationHp(hero,'head',1.5,'damage')).toBeUndefined();
+    expect(getCurrentHp(hero,'head')).toBe(9);
+  });
+
+  it('respects the injury maximum and requires confirmation (Core Rules p. 80)', () => {
+    const hero = hydrateCharacter({skills:{con:10,siz:10},currentHitPoints:{head:-1},locationInjuries:{head:{note:'Scar',maximumHp:2}}});
+    expect(adjustedLocationHp(hero,'head',10,'healing')).toBeUndefined();
+    expect(adjustedLocationHp(hero,'head',10,'healing',true)).toBe(2);
+    expect(getLocationInjury(hero,'head')?.note).toBe('Scar');
+  });
+});
 
 describe('Manual current hit points', () => {
   const legacy = () => ({skills:{con:10,siz:10}, hp:{head:{extraBonus:-2},chest:{extraBonus:0},leftArm:{extraBonus:-3},rightArm:{extraBonus:null}}});

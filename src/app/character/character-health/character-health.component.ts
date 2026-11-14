@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Character, LocationInjury } from 'src/app/model/character';
+import { Character, LocationInjury, LocationInjuryCondition } from 'src/app/model/character';
 import { CharacterEffect } from 'src/app/model/character-effect';
 import { Skill } from 'src/app/model/skill';
 import { CharacterEffectsComponent } from '../character-effects/character-effects.component';
@@ -11,6 +11,7 @@ import { CommittedNumberComponent } from '../committed-number/committed-number.c
 export interface HealthLocation {
   key: string;
   label: string;
+  range?: string;
   current: number | string;
   maximum: number | '';
   armour: number | string;
@@ -45,14 +46,37 @@ export class CharacterHealthComponent {
   @Output() effectsChange = new EventEmitter<CharacterEffect[]>();
   @Output() inspectHp = new EventEmitter<string>();
   @Output() hpChange = new EventEmitter<{ key: string; value: number | '' }>();
+  @Output() hpAdjustment = new EventEmitter<{ key: string; amount: number; operation: 'damage' | 'healing'; confirmed: boolean }>();
   @Output() restoreHp = new EventEmitter<{ key: string; confirmed: boolean }>();
   @Output() injuryChange = new EventEmitter<{ key: string; injury: LocationInjury }>();
   readonly anatomy = anatomy;
   readonly woundLabels: Record<WoundSeverity, string> = {
     unknown: 'Unknown HP', healthy: 'Healthy', minor: 'Minor wound', serious: 'Serious wound', major: 'Major wound',
   };
+  readonly injuryConditions: ReadonlyArray<{ key: LocationInjuryCondition; label: string }> = [
+    { key: 'impaling', label: 'Пронзение' },
+    { key: 'crushing', label: 'Дробление' },
+    { key: 'dismemberment', label: 'Отсечение' },
+  ];
+  showMobileBody = false;
   selectedKey = 'chest';
   hoveredKey = '';
+  hpAmount = 1;
+  get adjustmentAvailable(): boolean {
+    const current = this.selected?.current;
+    return current !== undefined && String(current).trim() !== '' && Number.isSafeInteger(Number(current));
+  }
+
+  get validAdjustment(): boolean {
+    return Number.isSafeInteger(this.hpAmount) && this.hpAmount > 0;
+  }
+
+  adjust(location: HealthLocation, operation: 'damage' | 'healing'): void {
+    if (!this.adjustmentAvailable || !this.validAdjustment) return;
+    const confirmed = operation === 'healing' && (location.severity === 'major' || !!location.injury);
+    if (confirmed && !window.confirm('Подтвердите, что лечение допустимо. Запись о травме и её предел ОЗ сохранятся.')) return;
+    this.hpAdjustment.emit({ key: location.key, amount: this.hpAmount, operation, confirmed });
+  }
 
   get selected(): HealthLocation | undefined {
     return this.locations.find(location => location.key === this.selectedKey) ?? this.locations[0];
@@ -80,6 +104,23 @@ export class CharacterHealthComponent {
       if (!window.confirm('Подтвердите, что восстановление допустимо при этом ранении. Запись о травме и её предел ОЗ сохранятся.')) return;
     }
     this.restoreHp.emit({ key: location.key, confirmed: needsConfirmation });
+  }
+
+  hasCondition(location: HealthLocation, condition: LocationInjuryCondition): boolean {
+    const conditions = location.injury?.conditions;
+    return Array.isArray(conditions) && conditions.includes(condition);
+  }
+
+  conditionNames(location: HealthLocation): string {
+    return this.injuryConditions.filter(({ key }) => this.hasCondition(location, key)).map(({ label }) => label).join(', ');
+  }
+
+  recordCondition(location: HealthLocation, condition: LocationInjuryCondition, checked: boolean): void {
+    const existing = location.injury?.conditions;
+    const conditions = new Set(Array.isArray(existing) ? existing : []);
+    if (checked) conditions.add(condition);
+    else conditions.delete(condition);
+    this.injuryChange.emit({ key: location.key, injury: { ...location.injury, conditions: [...conditions] } });
   }
 
   recordNote(location: HealthLocation, note: string): void {

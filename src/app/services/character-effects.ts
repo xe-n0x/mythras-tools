@@ -82,13 +82,13 @@ export function activeCharacteristicModifiers(character: Character, key: Charact
 }
 
 export function applyModifier(value: number, modifier: Modifier): number {
-  return modifier.operation === 'set' ? modifier.value : value + modifier.value;
+  return modifier.operation === 'set' ? modifier.value : Math.floor(value + modifier.value);
 }
 
 export function effectiveMovement(base: number, fatigue: FatigueRule): number {
   if (fatigue.unableToAct || fatigue.movement === 'immobile') return 0;
-  if (fatigue.movement === 'half') return base / 2;
-  return Math.max(0, base + (fatigue.movement ?? 0));
+  if (fatigue.movement === 'half') return Math.floor(base / 2);
+  return fatigue.movement === undefined ? Math.max(0, base) : Math.max(0, Math.floor(base + fatigue.movement));
 }
 
 export function fatigueAffectsAttribute(fatigue: FatigueRule, key: EffectAttribute): boolean {

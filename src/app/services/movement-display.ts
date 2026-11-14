@@ -22,11 +22,20 @@ export function jumpDistance(height: number, athletics: number, direction: 'vert
   const normalStep = conditions.normalStep ?? 0;
   if (penalty > 0 && (!Number.isFinite(normalStep) || normalStep <= 0)) return '';
   const afterArmour = penalty > 0 ? Math.max(normalStep, distance - penalty / 2) : distance;
-  return afterArmour + (conditions.critical ? 1 : 0);
+  return Math.floor(afterArmour + (conditions.critical ? 1 : 0));
 }
 
 export function runningJumpDistance(height: number, athletics: number, direction: 'vertical' | 'horizontal'): number | '' {
   return jumpDistance(height, athletics, direction, { runUp: true, armourPenalty: 0 });
+}
+
+/** Running (p. 39) and Swimming (p. 43), with Tennla rounding the final distance. */
+export function groundDistance(movement: number, athletics: number, pace: 3 | 5): number {
+  return Math.floor((movement + Math.floor(athletics / 25) * 0.5) * pace);
+}
+
+export function swimDistance(movement: number, swim: number): number {
+  return Math.floor(movement + Math.floor(swim / 20));
 }
 
 const measurement = new Intl.NumberFormat('en', { useGrouping: false, maximumFractionDigits: 12 });

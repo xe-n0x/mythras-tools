@@ -1,5 +1,6 @@
 export type HistoryField = 'name' | 'currentValues' | 'currentHitPoints' | 'locationInjuries' | 'skills' |
-  'damageModifierOverride' | 'activeEffects' | 'fatigueLevel' | 'equipment' | 'devotionPool' | 'devotionPoolCurrent';
+  'damageModifierOverride' | 'activeEffects' | 'fatigueLevel' | 'equipment' | 'devotionPool' | 'devotionPoolCurrent' |
+  'advancement' | 'passions' | 'magic';
 
 export interface CharacterChange {
   path: (string | number)[];

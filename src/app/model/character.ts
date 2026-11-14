@@ -1,6 +1,7 @@
 import { CharacterEquipment } from './character-equipment';
 import { CharacterEffect } from './character-effect';
 import { CharacterHistoryEvent } from './character-history';
+import type { CharacterAdvancement } from './character-advancement';
 import { CharacterPassions } from './character-passions';
 import { Rollable } from './rollable';
 import { CharacterFamily } from "./character-family";
@@ -10,9 +11,12 @@ import { CharacterSkills } from "./character-skills";
 import { SocialClass } from "./social-class";
 import { v4 as uuidv4 } from 'uuid';
 
+export type LocationInjuryCondition = 'impaling' | 'crushing' | 'dismemberment';
+
 export interface LocationInjury {
     note?: string;
     maximumHp?: number;
+    conditions?: LocationInjuryCondition[];
 }
 
 export class Character {
@@ -40,6 +44,7 @@ export class Character {
     fatigueLevel?: string;
     activeEffects?: CharacterEffect[];
     history?: CharacterHistoryEvent[];
+    advancement?: CharacterAdvancement;
     movementRate: number;
     age: number;
     culture : string;

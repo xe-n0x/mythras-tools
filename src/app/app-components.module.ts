@@ -1,3 +1,4 @@
+import { A11yModule } from '@angular/cdk/a11y';
 import { SkillActionsComponent } from './character/skill-actions/skill-actions.component';
 import { CustomizationComponent } from './character/customization/customization.component';
 import { AgeExperienceModalComponent } from './character/modals/age-experience/age-experience.component';
@@ -165,6 +166,7 @@ import { CreateSkillComponent } from './character/modals/create-skill/create-ski
 import { MythrasToDndMonsterBlockComponent } from './pages/mythras-to-dnd-monster-block/mythras-to-dnd-monster-block.component';
 import { ResponsiveCharacterViewerComponent } from './pages/responsive-character-viewer/responsive-character-viewer.component';
 import { CharacterHealthComponent } from './character/character-health/character-health.component';
+import { CharacterAdvancementComponent } from './character/character-advancement/character-advancement.component';
 import { CharacterEffectsComponent } from './character/character-effects/character-effects.component';
 import { DiceRollerComponent } from './character/dice-roller/dice-roller.component';
 import { CommittedNumberComponent } from './character/committed-number/committed-number.component';
@@ -320,7 +322,9 @@ import { RouterModule } from '@angular/router';
     ResponsiveCharacterViewerComponent
   ],
   imports: [
+    A11yModule,
     CharacterHealthComponent,
+    CharacterAdvancementComponent,
     CharacterEffectsComponent,
     DiceRollerComponent,
     CommittedNumberComponent,

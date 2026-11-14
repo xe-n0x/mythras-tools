@@ -36,13 +36,13 @@ export function resolveSessionSkill(character: Character, skill: Skill, calculat
 
 export function initiativeWithArmour(character: Character): number | string {
   const value = sessionValue(character, character.skills.init);
-  return typeof value === 'number' ? value - armourPenalty(character) : value;
+  return typeof value === 'number' ? Math.floor(value - armourPenalty(character)) : value;
 }
 
 export function magicPointMaximum(character: Character): number | '' {
   const known = [character.currentValues?.['pow'], character.skills.pow].some(value =>
     value != null && value !== '' && Number.isFinite(Number(value))) || activeCharacteristicModifiers(character, 'pow').length;
-  return known ? withEffectiveCharacteristics(character).skills.pow : '';
+  return known ? Math.floor(withEffectiveCharacteristics(character).skills.pow) : '';
 }
 
 export function sessionValue(character: Character, skill: Skill): number | string {

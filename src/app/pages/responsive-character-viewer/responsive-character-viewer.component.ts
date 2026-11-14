@@ -1,4 +1,6 @@
 import { CharacterHistory, savedHistory } from 'src/app/services/character-history';
+import { shapingLimit } from 'src/app/services/sorcery';
+import { AdvancementAction, advancementCopy, applyAdvancement, experienceBalance } from 'src/app/services/character-advancement';
 import { CharacterHistoryEvent, HistoryField } from 'src/app/model/character-history';
 import { RollCheckContext, RollRecord } from 'src/app/model/roll-record';
 import { formatPercentile } from 'src/app/services/dice';
@@ -9,11 +11,11 @@ import { initiativeWithArmour, magicPointMaximum, resolveSessionSkill, sessionVa
 import { attributeDetails, CalculatedAttribute, CalculationDetails, characteristicDetails, hpDetails } from 'src/app/services/calculation-details';
 import { difficultyGrades, DifficultyGrade, DifficultySystem, hardestGrade, skillCheckTarget } from 'src/app/services/skill-check';
 import { withCurrentCharacteristics, withEffectiveCharacteristics } from 'src/app/services/characteristics';
-import { formatMeasurement, heightInMetres, jumpDistance } from 'src/app/services/movement-display';
+import { formatMeasurement, groundDistance, heightInMetres, jumpDistance, swimDistance } from 'src/app/services/movement-display';
 import { addSpareArmour, armourLabel, armourPenalty, changeArmour, changeWeaponGrip, getArmourAt, hasArmour, spareArmour, weaponGrips, wornArmourEnc } from 'src/app/services/character-loadout';
 import { Router } from '@angular/router';
 import { downloadJson } from 'src/app/services/character-format';
-import { editCurrentHp, getCurrentHp, getHitLocations, getLocationInjury, getMaximumHp, getWoundSeverity, restoreLocationHp, setLocationInjury, usesHumanoidBodyMap } from 'src/app/services/hit-points';
+import { adjustedLocationHp, editCurrentHp, getCurrentHp, getHitLocations, getLocationInjury, getMaximumHp, getWoundSeverity, restoreLocationHp, setCurrentHp, setLocationInjury, usesHumanoidBodyMap } from 'src/app/services/hit-points';
 import { HealthLocation } from 'src/app/character/character-health/character-health.component';
 import { CharacterWeapon, WeaponGrip } from 'src/app/model/character-weapon';
 import { Weapon } from 'src/app/model/weapon';
@@ -23,7 +25,7 @@ import { Character, LocationInjury } from 'src/app/model/character';
 import { Skill } from 'src/app/model/skill';
 import { CharacterPassions } from 'src/app/model/character-passions';
 import { Spell } from 'src/app/model/spell';
-import { getAllCombatStyles, getButArmor, getMoneyAfterClass, getSkillBase, getTotalFromItems } from 'src/app/services/character-service.service';
+import { getAllCharacterSkills, getAllCombatStyles, getButArmor, getMoneyAfterClass, getSkillBase, getTotalFromItems } from 'src/app/services/character-service.service';
 import { orZero } from 'src/app/services/common.service';
 import { Passions } from 'src/app/services/passions.service';
 import { SpecialEffectsService } from 'src/app/services/special-effects.service';
@@ -106,8 +108,52 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
   readonly gripLabels: Record<WeaponGrip, string> = { main: 'Main hand', off: 'Off hand', both: 'Both hands' };
   skillQuery = '';
   magicQuery = '';
+  shapingChoice: Skill | null = null;
+  invocationChoice: Skill | null = null;
+
+  sorcerySkills(name: 'Shaping' | 'Invocation'): Skill[] {
+    const character = this.character;
+    if (!character) return [];
+    return getAllCharacterSkills(character).filter(skill =>
+      (skill.name === name || skill.name.startsWith(name + ' (') || skill.name.startsWith(name + ':')) &&
+      (skill.force || Number(storedSkillValue(character, skill)) !== 0));
+  }
+
+  chosenSorcerySkill(skills: Skill[], choice: Skill | null): Skill | undefined {
+    return skills.length === 1 ? skills[0] : skills.find(skill => skill === choice);
+  }
+
+  shapingPoints(skill: Skill): number {
+    return shapingLimit(this.character ? resolveSessionSkill(this.character, skill).effective : 0);
+  }
   private readonly failedPortraits = new Set<string>();
   @ViewChild('sectionPanel') sectionPanel?: ElementRef<HTMLElement>;
+  @ViewChild('sheetTools') private sheetTools?: ElementRef<HTMLDetailsElement>;
+  @ViewChild('sheetToolsTrigger') private sheetToolsTrigger?: ElementRef<HTMLElement>;
+
+  private closeSheetToolsOutside(event: Event): void {
+    const menu = this.sheetTools?.nativeElement;
+    if (!menu?.open || !(event.target instanceof Node) || menu.contains(event.target)) return;
+    const focused = document.activeElement;
+    this.closeSheetTools(focused === document.body || menu.contains(focused));
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  closeSheetToolsOnEscape(event: KeyboardEvent): void {
+    if (this.mobileSkills) {
+      event.preventDefault();
+      this.closeMobileSkills();
+      return;
+    }
+    if (!this.sheetTools?.nativeElement.open || event.target instanceof Element && event.target.closest('dialog[open]')) return;
+    event.preventDefault();
+    this.closeSheetTools(true);
+  }
+
+  private closeSheetTools(restoreFocus: boolean): void {
+    if (this.sheetTools) this.sheetTools.nativeElement.open = false;
+    if (restoreFocus) this.sheetToolsTrigger?.nativeElement.focus({ preventScroll: true });
+  }
   readonly weaponGroups = [{ranged:false,label:'Melee weapons & shields'}, {ranged:true,label:'Ranged weapons'}];
   readonly meleeFields = [{key:'size',label:'Size'}, {key:'reach',label:'Reach'}, {key:'ap',label:'AP'}, {key:'hp',label:'HP'}];
   readonly rangedFields = [{key:'dm',label:'DM'}, {key:'force',label:'Force'}, {key:'loadTime',label:'Load'}, {key:'range',label:'Range'}, ...this.meleeFields.filter(field=>field.key!=='reach')];
@@ -221,9 +267,20 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
       restoreLocationHp(this.character!, event.key, event.confirmed));
   }
 
+  adjustHealth(event: { key: string; amount: number; operation: 'damage' | 'healing'; confirmed: boolean }): void {
+    const character = this.character;
+    if (!character) return;
+    const after = adjustedLocationHp(character, event.key, event.amount, event.operation, event.confirmed);
+    if (after === undefined) return;
+    this.recordChange(['currentHitPoints'], {
+      type: event.operation === 'damage' ? 'Damage' : 'Healing', target: this.locationLabel(event.key),
+      before: getCurrentHp(character, event.key), after,
+    }, () => setCurrentHp(character, event.key, after));
+  }
+
   editInjury(edit: { key: string; injury: LocationInjury }): void {
     if (!this.character || !this.hitLocations.some(location => location.key === edit.key)) return;
-    this.recordChange(['locationInjuries'], {type:'Location state', target:this.locationLabel(edit.key), description:edit.injury.note}, () =>
+    this.recordChange(['locationInjuries'], {type:'Location state', target:this.locationLabel(edit.key), description:[edit.injury.note, ...(Array.isArray(edit.injury.conditions) ? edit.injury.conditions.map(condition => this.ru(condition)) : [])].filter(Boolean).join(' · ')}, () =>
       setLocationInjury(this.character!, edit.key, edit.injury));
   }
 
@@ -256,6 +313,40 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
   }
 
   mobileSkills = false;
+  @ViewChild('mobileSkillTrigger') private mobileSkillTrigger?: ElementRef<HTMLButtonElement>;
+  @ViewChild('skillSearch') private skillSearch?: ElementRef<HTMLInputElement>;
+  private checkOpenedFromDrawer = false;
+
+  openMobileSkills(): void {
+    this.mobileSkills = true;
+    this.changeDetector.detectChanges();
+    this.skillSearch?.nativeElement.focus({ preventScroll: true });
+  }
+
+  closeMobileSkills(restoreFocus = true): void {
+    if (!this.mobileSkills) return;
+    this.mobileSkills = false;
+    this.changeDetector.detectChanges();
+    if (restoreFocus) this.mobileSkillTrigger?.nativeElement.focus({ preventScroll: true });
+  }
+
+  @HostListener('window:resize')
+  closeDrawerOnDesktop(): void {
+    if (this.mobileSkills && !window.matchMedia('(max-width: 920px)').matches) this.closeMobileSkills(false);
+  }
+
+  closeSkillCheck(): void {
+    this.selectedCheck = undefined;
+    if (this.checkOpenedFromDrawer) this.mobileSkillTrigger?.nativeElement.focus({ preventScroll: true });
+    this.checkOpenedFromDrawer = false;
+  }
+
+  goToPlayPanel(panel: string): void {
+    if (this.activeSection !== 'play') this.setSection('play');
+    const heading = this.sectionPanel?.nativeElement.querySelector<HTMLElement>(panel);
+    heading?.scrollIntoView({ block: 'start' });
+    heading?.focus({ preventScroll: true });
+  }
   selectedCheck?: Skill;
   difficultyGrade: DifficultyGrade = 'Standard';
   difficultySystem: DifficultySystem = 'standard';
@@ -298,6 +389,8 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
   }
 
   openSkillCheck(skill: Skill, dialog: HTMLDialogElement): void {
+    this.checkOpenedFromDrawer = this.mobileSkills;
+    this.closeMobileSkills(false);
     this.selectedCheck = skill;
     this.difficultyGrade = 'Standard';
     dialog.showModal();
@@ -332,6 +425,44 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
       this.persistCharacter();
     }
     return result;
+  }
+
+  advancementError = '';
+
+  applyCharacterAdvancement(request: { actions: AdvancementAction[]; baseline: string; descriptions: string[]; dialog: HTMLDialogElement }): void {
+    const character = this.character;
+    if (!character || !request.actions.length) return;
+    if (JSON.stringify(character) !== request.baseline) {
+      this.advancementError = 'Данные персонажа изменились. Откройте раздел развития заново.';
+      return;
+    }
+    try {
+      const result = applyAdvancement(character, request.actions);
+      const draft = advancementCopy(character);
+      const fields: HistoryField[] = ['skills', 'advancement', 'passions', 'magic'];
+      const type = request.actions.every(action => action.kind.startsWith('manual')) ? 'Manual Improvement'
+        : request.actions.every(action => ['startTraining', 'finishTraining', 'cancelTraining'].includes(action.kind)) ? 'Training'
+        : request.actions.every(action => !action.kind.startsWith('manual') && !action.kind.endsWith('Training')) ? 'Experience Roll' : 'Advancement';
+      this.historySession.record(draft, fields, {
+        type, target: 'Advancement', description: request.descriptions.join('\n'),
+        source: type === 'Manual Improvement' ? 'Решение ведущего' : 'Mythras Core Rules, pp. 71–73',
+        before: experienceBalance(character), after: experienceBalance(result),
+      }, () => {
+        draft.skills = result.skills;
+        draft.advancement = result.advancement;
+        draft.passions = result.passions;
+        draft.magic = result.magic;
+      }, next => {
+        this.storage.saveCharacter(next, 'view-character');
+        if (this.storage.error) throw new Error(this.ru(this.storage.error));
+        return true;
+      });
+      this.character = draft;
+      this.advancementError = '';
+      request.dialog.close();
+    } catch (error) {
+      this.advancementError = (error as Error).message;
+    }
   }
 
   replayHistory(direction: 'undo' | 'redo'): void {
@@ -538,6 +669,7 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
   }
 
   setSection(section: ViewerSection, target?: SectionTarget): void {
+    this.closeMobileSkills(false);
     this.flushPendingSaves();
     this.activeSection = section;
     this.storage.setRaw('viewer-section-' + this.character!.id, section);
@@ -546,7 +678,9 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
     const destination = target ? panel?.querySelector<HTMLElement>(`[data-section-target="${target}"]`) : panel;
     if (destination instanceof HTMLDetailsElement) destination.open = true;
     destination?.scrollIntoView({block:'start'});
-    destination?.focus({preventScroll:true});
+    const headings = destination?.querySelectorAll<HTMLElement>('[data-section-focus]');
+    const heading = headings && Array.from(headings).find(element => element.getClientRects().length);
+    (heading ?? this.mobileSkillTrigger?.nativeElement)?.focus({preventScroll:true});
   }
 
   matchesSkill(skill: Skill): boolean {
@@ -765,13 +899,13 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
   getRun(): number {
     if (!this.canMove) return 0;
     const mr = this.walkWithEffects;
-    return (mr + Math.floor(this.getAthletics() / 25) * 0.5) * 3;
+    return groundDistance(mr, this.getAthletics(), 3);
   }
 
   getSprint(): number {
     if (!this.canMove) return 0;
     const mr = this.walkWithEffects;
-    return (mr + Math.floor(this.getAthletics() / 25) * 0.5) * 5;
+    return groundDistance(mr, this.getAthletics(), 5);
   }
 
   getHorizontal(): number | '' {
@@ -795,7 +929,7 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
   getSwim(): number {
     if (!this.canMove) return 0;
     const mr = this.walkWithEffects;
-    return mr + Math.floor(this.getSwimSkill() / 20);
+    return swimDistance(mr, this.getSwimSkill());
   }
 
   getStandardSkills(): Skill[] {
@@ -935,6 +1069,16 @@ export class ResponsiveCharacterViewerComponent implements OnInit, OnDestroy {
   }
 
   setDevotion(value: any): void { this.setSkill(this.getDevotionSkill(), value); }
+
+  setPassionRating(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const passion = this.character?.passions[index];
+    if (!passion || !input.validity.valid || input.value && !Number.isSafeInteger(input.valueAsNumber)) return;
+    this.recordChange(['passions'], { type: 'Manual Improvement', target: passion.passion || 'Страсть' }, () => {
+      if (input.value) passion.modifierNumber = input.valueAsNumber;
+      else delete passion.modifierNumber;
+    });
+  }
 
   getPassion(index: number): string {
     if (!this.character) {
@@ -1648,10 +1792,15 @@ Enemies: ${family.enemies}`.trim();
   }
 
   @HostListener('document:input')
-  @HostListener('document:click')
   @HostListener('document:change')
   onUserInteraction(): void {
     this.saveHandle?.schedule();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    this.closeSheetToolsOutside(event);
+    this.onUserInteraction();
   }
 
   @HostListener('window:beforeunload')

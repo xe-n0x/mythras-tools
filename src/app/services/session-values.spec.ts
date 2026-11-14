@@ -16,6 +16,11 @@ describe('Character session effects', () => {
     operation: 'set', value: 80,
   };
 
+  it('uses Tennla rounding for an odd movement rate halved by fatigue (Core Rules p. 79)', () => {
+    expect(effectiveMovement(5, {movement: 'half'})).toBe(2);
+    expect(effectiveMovement(5.5, {})).toBe(5.5);
+  });
+
   it('recalculates STR 15 → 12, Athletics and Damage Modifier and restores the original on removal', () => {
     const character = hydrateCharacter({ skills: { str: 15, dex: 12, siz: 11, pow: 12 } });
     const athletics = character.skills.skills.find(skill => skill.name === 'Athletics')!;

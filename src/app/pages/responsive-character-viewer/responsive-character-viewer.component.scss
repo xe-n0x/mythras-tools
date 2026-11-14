@@ -31,41 +31,7 @@
     var(--sheet-bg);
 }
 
-@media screen {
-  .tennla-shell > .app-container {
-    max-width: none;
-    padding-inline: clamp(12px, 1.8vw, 32px);
-  }
-}
-
-.tennla-margins { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-.tennla-edge {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #634c2e;
-  opacity: .08;
-  font: 600 12px/1 Georgia, serif;
-  letter-spacing: .22em;
-  writing-mode: vertical-rl;
-}
-.tennla-edge::before, .tennla-edge::after { content: ''; }
-.tennla-edge::before { inline-size: 70px; border-block-start: 1px solid currentColor; }
-.tennla-edge::after {
-  inline-size: 9px;
-  block-size: 9px;
-  border: 1px solid currentColor;
-  transform: rotate(45deg);
-}
-.tennla-edge-sun { left: 6px; top: 190px; }
-.tennla-edge-sea { right: 6px; top: 370px; color: var(--sheet-accent); }
-.tennla-edge-sun::after {
-  border-radius: 50%;
-  background: radial-gradient(circle, currentColor 20%, transparent 30%);
-}
-@media (max-width: 1270px) { .tennla-margins { display: none; } }
-@media print { .tennla-margins, .tennla-seal { display: none; } }
+@media print { .tennla-seal { display: none; } }
 
 .viewer-shell {
   display: grid;
@@ -163,13 +129,15 @@
 .sheet-tool-actions {
   box-sizing: border-box;
   position: absolute;
-  right: 0;
-  top: calc(100% + 5px);
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + 5px);
   z-index: 20;
   display: grid;
   gap: 5px;
   width: max-content;
   max-width: min(240px, 80vw);
+  max-height: 52dvh;
+  overflow-y: auto;
   padding: 8px;
   background: var(--sheet-paper);
   border: 1px solid var(--sheet-line);
@@ -441,8 +409,6 @@ textarea { display: block; resize: vertical; }
   .viewer-header { grid-template-columns: minmax(0, 1fr); }
   .tennla-brand { gap: 8px; }
   .viewer-header .viewer-actions { margin-inline-start: 0; }
-  .sheet-tools[open] { width: min(240px, 100%); }
-  .sheet-tool-actions { position: static; width: 100%; max-width: none; margin-top: 5px; }
   .character-play-grid, .attribute-pair, .skills-columns, .extras-grid { grid-template-columns: minmax(0, 1fr); }
   .resource-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .resource-values > :nth-last-child(2) { border-bottom: 0; }
@@ -471,7 +437,7 @@ textarea { display: block; resize: vertical; }
   gap: var(--sheet-gap);
 }
 
-.mobile-skill-switch { display: none; }
+.mobile-play-actions, .close-skill-drawer, .skill-drawer-backdrop { display: none; }
 .session-skills { padding: 10px; min-width: 0; }
 .session-skills > header {
   margin: -10px -10px 5px;
@@ -520,6 +486,11 @@ textarea { display: block; resize: vertical; }
 .check-options label { display: grid; gap: 4px; }
 .check-options select { width: 100%; }
 .check-totals dd { margin: 2px 0 0; font-weight: bold; }
+.check-details { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--sheet-line); }
+.check-details summary { color: var(--sheet-accent); cursor: pointer; }
+.check-details .field-hint { margin-top: 8px; }
+[data-section-focus]:focus-visible { outline: 2px solid #b3761e; outline-offset: 2px; }
+h2[data-section-focus] { width: fit-content; max-width: 100%; }
 .check-target { margin: 10px 0 7px; padding: 7px 9px; border-radius: 6px; background: var(--sheet-sea-wash); color: var(--sheet-accent); }
 .check-sources { padding-left: 18px; overflow-wrap: anywhere; }
 .effect-conflict, .check-sources .effect-conflict strong { color: #8d2c2c; }
@@ -559,11 +530,30 @@ textarea { display: block; resize: vertical; }
 
 @media (max-width: 920px) {
   .character-workspace { grid-template-columns: minmax(0, 1fr); }
-  .mobile-skill-switch { @include choice.action; display: inline-flex; align-items: center; justify-self: start; }
-  .character-workspace:not(.show-mobile-skills) .session-skills,
-  .show-mobile-skills .character-home { display: none; }
+  .character-workspace:not(.show-mobile-skills) .session-skills { display: none; }
+  .mobile-play-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .mobile-play-actions button, .close-skill-drawer { @include choice.action; min-height: 44px; }
+  .mobile-play-actions button { padding-inline: 3px; font-size: 12px; overflow-wrap: anywhere; }
+  .close-skill-drawer { display: inline-flex; }
+  .skill-drawer-backdrop { display: block; position: fixed; inset: 0; z-index: 90; background: #1b2e36a8; touch-action: none; }
+  .show-mobile-skills .session-skills {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 91;
+    box-sizing: border-box;
+    width: min(360px, calc(100% - 30px));
+    max-height: 100dvh;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .show-mobile-skills .session-skills > header { flex-wrap: wrap; }
   .session-skill-list button { min-height: 40px; }
 }
 
-// Visual-only Tennla redesign; the existing behavior remains unchanged.
+[id^='play-'], #combat-equipment-title { scroll-margin-top: 70px; }
+
 @include tennla.viewer();

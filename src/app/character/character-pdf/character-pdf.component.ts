@@ -1,6 +1,6 @@
 import { withCurrentCharacteristics, withEffectiveCharacteristics } from 'src/app/services/characteristics';
-import { formatMeasurement, runningJumpDistance } from 'src/app/services/movement-display';
-import { armourPenalty } from 'src/app/services/character-loadout';
+import { formatMeasurement, groundDistance, runningJumpDistance, swimDistance } from 'src/app/services/movement-display';
+import { armourPenalty, wornArmourEnc } from 'src/app/services/character-loadout';
 import { Weapon } from './../../model/weapon';
 import { CombatStyle } from './../../model/combat-style';
 import { orZero } from 'src/app/services/common.service';
@@ -12,7 +12,6 @@ import {
   getTotalFromItems,
   getAllCombatStyles,
   getButArmor,
-  getOnlyArmor,
 } from 'src/app/services/character-service.service';
 import { Skill } from 'src/app/model/skill';
 import { Character } from 'src/app/model/character';
@@ -215,8 +214,7 @@ export class CharacterPdfComponent {
 
   getPassionPerc(index: number): number | string {
     let passion = this.character.passions[index];
-    if (passion) return passion.modifierNumber;
-    return '';
+    return passion?.modifierNumber ?? '';
   }
 
   setPassionPerc(index: number, event: any) {
@@ -305,19 +303,11 @@ ${social ? social.resources : ''}`.trim() + '\n';
   readonly formatMeasurement = formatMeasurement;
 
   getRun(): number {
-    return (
-      (parseInt(this.character.movementRate as any) +
-        Math.floor(this.getAthletics() / 25) * 0.5) *
-      3
-    );
+    return groundDistance(Number(this.character.movementRate), this.getAthletics(), 3);
   }
 
   getSprint(): number {
-    return (
-      (parseInt(this.character.movementRate as any) +
-        Math.floor(this.getAthletics() / 25) * 0.5) *
-      5
-    );
+    return groundDistance(Number(this.character.movementRate), this.getAthletics(), 5);
   }
 
   getHorizontal(): number | '' {
@@ -329,10 +319,7 @@ ${social ? social.resources : ''}`.trim() + '\n';
   }
 
   getSwim(): number {
-    return (
-      parseInt(this.character.movementRate as any) +
-      Math.floor(this.getSwimSkill() / 20)
-    );
+    return swimDistance(Number(this.character.movementRate), this.getSwimSkill());
   }
 
   getCombatStyles(): CombatStyle[] {
@@ -485,9 +472,7 @@ ${social ? social.resources : ''}`.trim() + '\n';
   }
 
   getArmourEnc(): number {
-    if (this.character.equipment.armourEnc == undefined)
-      return getOnlyArmor(this.character, 'enc');
-    return this.character.equipment.armourEnc;
+    return wornArmourEnc(this.character);
   }
 
   setArmourEnc(event: any) {

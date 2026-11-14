@@ -2,7 +2,7 @@ import { CharacterEffect } from '../model/character-effect';
 import { changeWeaponGrip } from './character-loadout';
 import { hydrateCharacter, parseCharacterFile } from './character-format';
 import { CharacterHistory, savedHistory } from './character-history';
-import { editCurrentHp } from './hit-points';
+import { editCurrentHp, restoreLocationHp, setLocationInjury } from './hit-points';
 import { resolveSessionSkill } from './session-values';
 import { rollSkillCheck } from './skill-check';
 
@@ -26,6 +26,11 @@ describe('Character history', () => {
     expect(savedHistory(restored)[1].roll?.dice.total).toBe(42);
     expect(savedHistory(restored)[1].roll?.outcome?.degree).toBe('Success');
   });
+  it('retains old fractional targets and recorded outcomes when decoding JSON', () => {
+    const roll = { check: { target: 42.5 }, outcome: { degree: 'Critical Success' }, dice: { total: 5 } };
+    const character = parseCharacterFile(JSON.stringify({ name: 'Legacy', history: [{ id: 'old', type: 'Roll', roll, changes: [] }] }))[0];
+    expect(character.history?.[0].roll).toEqual(jasmine.objectContaining(roll));
+  });
   it('records one HP commit, undoes and redoes it, and keeps only the journal after reload', () => {
     let character = hydrateCharacter({ name: 'Hero', currentHitPoints: { head: 3, chest: 6 } });
     const history = new CharacterHistory();
@@ -42,6 +47,24 @@ describe('Character history', () => {
     expect(savedHistory(restored).length).toBe(1);
     expect(new CharacterHistory().replay(restored, 'undo', () => true)).toBeUndefined();
     expect(savedHistory(hydrateCharacter({ name: 'Legacy' }))).toEqual([]);
+  });
+
+  it('preserves multiple explicit wounds through healing, history replay and JSON', () => {
+    const history = new CharacterHistory();
+    let character = hydrateCharacter({ name: 'Old hero', skills: { con: 13, siz: 11 }, currentHitPoints: {leftArm: -2}, locationInjuries: {leftArm: {note: 'Old note', extension: true}} });
+    history.record(character, ['locationInjuries'], {type: 'Location state', target: 'Left arm'}, () =>
+      setLocationInjury(character, 'leftArm', {conditions: ['impaling', 'crushing']}));
+    character = history.replay(character, 'undo', () => true)!;
+    expect(character.locationInjuries?.['leftArm'].conditions).toBeUndefined();
+    character = history.replay(character, 'redo', () => true)!;
+    expect(restoreLocationHp(character, 'leftArm', false)).toBeFalse();
+    expect(restoreLocationHp(character, 'leftArm', true)).toBeTrue();
+    character = parseCharacterFile(JSON.stringify(character))[0];
+    expect(character.currentHitPoints?.['leftArm']).toBe(4);
+    expect(character.locationInjuries?.['leftArm']).toEqual(jasmine.objectContaining({note: 'Old note', extension: true, conditions: ['impaling', 'crushing']}));
+    setLocationInjury(character, 'leftArm', {conditions: []});
+    expect(character.locationInjuries?.['leftArm'].conditions).toBeUndefined();
+    expect(character.locationInjuries?.['leftArm'].note).toBe('Old note');
   });
 
   it('recalculates dependent skills without logging them and restores an effect only once', () => {

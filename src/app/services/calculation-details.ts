@@ -19,7 +19,7 @@ const attributeRules = {
   ap: ['Look up INT + DEX in the Action Points table.', 'Action Points, p. 8'],
   luck: ['Look up POW in the Luck Points table.', 'Luck Points, p. 10'],
   damage: ['Look up STR + SIZ in the Damage Modifier table.', 'Damage Modifier, p. 9'],
-  init: ['Average DEX and INT. The sheet rounds up, then applies Fatigue and armour where applicable.', 'Initiative Bonus, p. 10 · Armour Penalty to Initiative, p. 58'],
+  init: ['Average DEX and INT. Tennla rounds down, then applies Fatigue and armour where applicable.', 'Initiative Bonus, p. 10 · Armour Penalty to Initiative, p. 58'],
   healing: ['Look up CON in the Healing Rate table.', 'Healing Rate, p. 9'],
   expMod: ['Look up CHA in the Experience Modifier table.', 'Experience Modifier, p. 9'],
 } as const;

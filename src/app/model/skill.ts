@@ -2,6 +2,8 @@ export class Skill {
     name : string;
     professional : boolean;
     custom?: boolean;
+    trainedSinceExperience?: boolean;
+    fumbleImprovementClaimed?: boolean;
     force : boolean;
     base : string[];
     cultureBonus : number;

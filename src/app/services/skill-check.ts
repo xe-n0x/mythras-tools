@@ -22,8 +22,14 @@ export function hardestGrade(chosen: DifficultyGrade, penalties: readonly Diffic
 export function skillCheckTarget(score: number, grade: DifficultyGrade, system: DifficultySystem): number | null {
   if (grade === 'Automatic' || grade === 'Hopeless') return null;
   const rule = grades[grade];
-  return system === 'standard' ? score * rule.multiplier : score + rule.points;
+  if (system === 'simplified') return Math.floor(score + rule.points);
+  return Math.floor(grade === 'Hard' ? score * 2 / 3 : score * rule.multiplier);
 }
+/** Tennla rounds the modified Critical Range down (Core Rules p. 37 rounds up). */
+export function criticalRange(target: number): number {
+  return Math.max(0, Math.floor(target / 10));
+}
+
 import type { CheckOutcome, RollCheckContext, RollRecord } from '../model/roll-record';
 import { parseDiceExpression, RandomWord, rollDice } from './dice';
 
@@ -41,8 +47,8 @@ export function resolveCheckRoll(check: RollCheckContext, roll: number): CheckOu
     if (!over100) return { degree: 'Fumble', explanation: '99 fumbles at 100% skill or below.' };
   }
   if (roll >= 96) return { degree: 'Failure', explanation: '96–99 cannot succeed.' };
-  const critical = Math.ceil(target / 10);
-  if (roll <= critical) return { degree: 'Critical Success', explanation: 'Within one tenth of the modified target, rounded up.' };
+  const critical = criticalRange(target);
+  if (roll <= critical) return { degree: 'Critical Success', explanation: 'Within one tenth of the modified target, rounded down (Tennla).' };
   if (roll <= 5) return { degree: 'Success', explanation: '01–05 always succeed on a rolled check.' };
   return roll <= target
     ? { degree: 'Success', explanation: 'Roll is at or below the target.' }

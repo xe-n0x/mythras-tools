@@ -1,5 +1,6 @@
 import { TableComponent } from 'src/app/table-component/table.component';
 import { ModalInnerContent } from './../../model/modal-inner-content';
+import { criticalRange, skillCheckTarget } from 'src/app/services/skill-check';
 import { Component } from '@angular/core';
 
 @Component({
@@ -22,7 +23,7 @@ export class SuccessLevelsComponent extends TableComponent implements ModalInner
       {level: "Normal Skill", mod:1, suc:true, crit:true, fail:true, fumble: true},
       {level: "Very Easy", mod:2, suc:true, crit:true, fail:true, fumble: true},
       {level: "Easy", mod:1.5, suc:true, crit:true, fail:true, fumble: true},
-      {level: "Hard", mod:0.6666666666666, suc:true, crit:true, fail:true, fumble: true},
+      {level: "Hard", mod:2 / 3, suc:true, crit:true, fail:true, fumble: true},
       {level: "Formidalble", mod:0.5, suc:true, crit:true, fail:true, fumble: true},
       {level: "Herculean", mod:0.1, suc:true, crit:true, fail:true, fumble: true},
       {level: "Hopeless", mod:0, suc:true, crit:true, fail:true, fumble: true},
@@ -34,32 +35,33 @@ export class SuccessLevelsComponent extends TableComponent implements ModalInner
   }
 
   getValue(skipAug? : boolean) : number {
-    return (this.skill == undefined ? 100 : this.skill) - (!this.opponent ? 0 : Math.max(0,this.opponent-100)) + (skipAug || !this.augment ? 0 : this.augment*0.2);
+    return (this.skill == undefined ? 100 : this.skill) - (!this.opponent ? 0 : Math.max(0,this.opponent-100)) + (skipAug || !this.augment ? 0 : Math.floor(this.augment / 5));
   }
 
   getNormalValue(mod : number) : number {
-    return Math.ceil((this.skill == undefined ? 100 : this.skill)*mod);
+    return this.roundedTarget(this.skill ?? 100, mod);
   }
 
   getCrit(mod : number) : number {
-    let val = Math.ceil(this.getValue(true)*mod/10);
-    if(val == 0)
-      return 0;
-    return Math.max(val,1);
+    return criticalRange(this.roundedTarget(this.getValue(true), mod));
   }
 
   getSuccess(mod : number) : number {
-    let val = Math.ceil(this.getValue()*mod);
+    let val = this.roundedTarget(this.getValue(), mod);
     if(val == 0)
       return 0;
     return Math.min(Math.max(val,5),95);
   }
 
   getFumble(mod : number) : number {
-    let val = Math.ceil(this.getValue()*mod);
+    const val = this.getValue() * mod;
     if(val > 100)
       return 100;
     return 99;
+  }
+
+  private roundedTarget(score: number, modifier: number): number {
+    return modifier === 2 / 3 ? skillCheckTarget(score, 'Hard', 'standard')! : Math.floor(score * modifier);
   }
 
   getFailure(mod : number) : number {

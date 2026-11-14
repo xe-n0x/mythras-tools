@@ -27,6 +27,7 @@ export class DiceRollerComponent {
   modifier: number | null = 0;
   customExpression = '';
   manual = '';
+  repeatManual = '';
   error = '';
   result?: RollRecord;
   private rolling = false;
@@ -48,19 +49,34 @@ export class DiceRollerComponent {
   }
 
   submit(): void {
-    if (this.rolling || this.result || this.check?.target === null) return;
+    if (this.result || this.check?.target === null) return;
+    const manual = this.origin === 'manual' ? this.manual : undefined;
+    this.performRoll(() => this.check ? rollSkillCheck(this.check, manual) : this.freeRoll(manual), !!this.check);
+  }
+
+  repeatRoll(): void {
+    const previous = this.result;
+    if (!previous) return;
+    const manual = previous.dice.origin === 'manual' ? this.repeatManual : undefined;
+    this.performRoll(() => previous.check
+      ? rollSkillCheck(previous.check, manual)
+      : this.rollExpression(previous.dice.expression, manual), !!previous.check);
+  }
+
+  private performRoll(roll: () => RollRecord | undefined, skillCheck: boolean): void {
+    if (this.rolling) return;
     this.rolling = true;
     this.error = '';
     try {
-      const manual = this.origin === 'manual' ? this.manual : undefined;
-      const result = this.check ? rollSkillCheck(this.check, manual) : this.freeRoll(manual);
+      const result = roll();
       if (!result) {
-        if (!this.error) this.error = this.check
+        if (!this.error) this.error = skillCheck
           ? 'Enter one percentile value from 01 to 99, or 00 for 100.'
           : 'Enter one valid face for each die, in order, separated by commas or spaces.';
         return;
       }
       this.result = result;
+      this.repeatManual = '';
       this.rolled.emit(result);
     } catch {
       this.error = 'The browser could not roll the dice. You can enter a physical roll.';
@@ -71,10 +87,14 @@ export class DiceRollerComponent {
 
   private freeRoll(manual?: string): RollRecord | undefined {
     const modifier = this.modifier ?? 0;
-    const text = this.customExpression.trim() ||
-      (this.count ?? '') + 'd' + this.sides + (modifier > 0 ? '+' + modifier : modifier < 0 ? String(modifier) : '');
+    const text = this.customExpression.trim() || (this.count === null ? '' :
+      this.count + 'd' + this.sides + (modifier > 0 ? '+' + modifier : modifier < 0 ? String(modifier) : ''));
+    return this.rollExpression(text, manual);
+  }
+
+  private rollExpression(text: string, manual?: string): RollRecord | undefined {
     const expression = parseDiceExpression(text);
-    if (!expression || (!this.customExpression.trim() && this.count === null)) {
+    if (!expression) {
       this.error = 'Enter a dice expression such as 2d6+3, with 1–50 dice and modifiers up to ±10000.';
       return undefined;
     }
@@ -85,6 +105,7 @@ export class DiceRollerComponent {
   newRoll(): void {
     this.result = undefined;
     this.manual = '';
+    this.repeatManual = '';
     this.error = '';
   }
 }

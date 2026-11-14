@@ -45,7 +45,8 @@ export class CharacterHistory {
   get canUndo(): boolean { return this.undoStack.length > 0; }
   get canRedo(): boolean { return this.redoStack.length > 0; }
 
-  record<T>(character: Character, fields: readonly HistoryField[], details: Details, action: () => T): T {
+  record<T>(character: Character, fields: readonly HistoryField[], details: Details, action: () => T,
+    saveDraft?: (character: Character) => boolean): T {
     const before = capture(character, fields);
     const result = action();
     const after = capture(character, fields);
@@ -58,6 +59,7 @@ export class CharacterHistory {
       after: Object.prototype.hasOwnProperty.call(details, 'after') ? details.after : changes.length === 1 ? changes[0].after : undefined,
     };
     const entries = appendHistory(character, event);
+    if (saveDraft && !saveDraft(character)) throw new Error('Не удалось сохранить изменения персонажа.');
     const kept = new Set(entries.map(entry => entry.id));
     this.undoStack = [...this.undoStack, event].filter(entry => kept.has(entry.id));
     this.redoStack = [];

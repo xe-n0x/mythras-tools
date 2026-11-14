@@ -3,10 +3,15 @@ import { Skill } from '../model/skill';
 import { getSkillTotal } from './character-service.service';
 import { withCurrentCharacteristics, withEffectiveCharacteristics } from './characteristics';
 
+/** Humanoid Hit Locations, Core Rules p. 109. Keys are part of the save format. */
 export const HIT_LOCATIONS = [
-  {key:'head', label:'Head'}, {key:'chest', label:'Chest'}, {key:'abdoment', label:'Abdomen'},
-  {key:'leftArm', label:'Left arm'}, {key:'rightArm', label:'Right arm'},
-  {key:'leftLeg', label:'Left leg'}, {key:'rightLeg', label:'Right leg'},
+  { key: 'head', label: 'Head', range: '19–20' },
+  { key: 'leftArm', label: 'Left arm', range: '16–18' },
+  { key: 'rightArm', label: 'Right arm', range: '13–15' },
+  { key: 'chest', label: 'Chest', range: '10–12' },
+  { key: 'abdoment', label: 'Abdomen', range: '7–9' },
+  { key: 'leftLeg', label: 'Left leg', range: '4–6' },
+  { key: 'rightLeg', label: 'Right leg', range: '1–3' },
 ] as const;
 export type HitLocation = typeof HIT_LOCATIONS[number]['key'];
 
@@ -32,7 +37,7 @@ export function hasCustomHitLocations(hp: object): boolean {
   );
 }
 
-export function getHitLocations(character: Character): { key: string; label: string }[] {
+export function getHitLocations(character: Character): { key: string; label: string; range?: string }[] {
   const locations = character.hp as unknown as Record<string, unknown>;
   if (usesHumanoidBodyMap(character)) return [...HIT_LOCATIONS];
   return Object.entries(locations)
@@ -71,7 +76,7 @@ export function getMaximumHp(character: Character, location: string): number | '
   const definition = (character.hp as unknown as Record<string, unknown>)[location];
   if (!isLocationSkill(definition)) return fixedHp(definition) ?? '';
   // Earlier sheets stored manual current HP as extraBonus; it is not part of maximum HP.
-  return getSkillTotal(character, {...definition, extraBonus:0} as Skill);
+  return getSkillTotal(character, definition, false);
 }
 
 export function getLocationInjury(character: Character, location: string): LocationInjury | undefined {
@@ -86,8 +91,13 @@ export function setLocationInjury(character: Character, location: string, injury
     character.locationInjuries = {};
   }
   const injuries = character.locationInjuries;
-  if (!injury.note && injury.maximumHp === undefined) delete injuries[location];
-  else injuries[location] = injury;
+  const previous = getLocationInjury(character, location);
+  const next = { ...previous, ...injury };
+  if (!next.note) delete next.note;
+  if (next.maximumHp === undefined) delete next.maximumHp;
+  if (!next.conditions?.length) delete next.conditions;
+  if (Object.keys(next).length === 0) delete injuries[location];
+  else injuries[location] = next;
 }
 
 export function editCurrentHp(character: Character, location: string, value: number | string | null): void {
@@ -101,6 +111,23 @@ export function editCurrentHp(character: Character, location: string, value: num
   if (!Number.isSafeInteger(current)) return;
   const maximum = getMaximumHp(withEffectiveCharacteristics(character), location);
   setCurrentHp(character, location, maximum === '' ? current : Math.min(current, maximum));
+}
+
+export function adjustedLocationHp(character: Character, location: string, amount: number,
+  operation: 'damage' | 'healing', confirmed = false): number | undefined {
+  if (!Number.isSafeInteger(amount) || amount <= 0 || !getHitLocations(character).some(entry => entry.key === location)) return;
+  const recorded = getCurrentHp(character, location);
+  if (recorded === '' || !String(recorded).trim() || !Number.isSafeInteger(Number(recorded))) return;
+  const current = Number(recorded);
+  if (operation === 'damage') {
+    const next = current - amount;
+    return Number.isSafeInteger(next) ? next : undefined;
+  }
+  // Healing from Injury / Permanent Injuries, Core Rules p. 80.
+  const maximum = getMaximumHp(withEffectiveCharacteristics(character), location);
+  if (maximum === '' || maximum <= current || maximum <= 0) return;
+  if (!confirmed && (getLocationInjury(character, location) || getWoundSeverity(current, maximum) === 'major')) return;
+  return current + Math.min(amount, maximum - current);
 }
 
 /** Record completed recovery. Core Rules, Healing from Injury and Permanent Injuries, p. 80. */
@@ -158,7 +185,7 @@ export function restoreLegacyCurrentHp(character: Character): void {
     const oldValue: unknown = definition.extraBonus;
     // Reading/calculating HP never wrote this field; its presence records an old manual edit.
     if (oldValue != null && oldValue !== '' && Number.isFinite(Number(oldValue))) {
-      setCurrentHp(character, key, getSkillTotal(calculation, definition));
+      setCurrentHp(character, key, getSkillTotal(calculation, definition, true, true));
     }
   }
 }

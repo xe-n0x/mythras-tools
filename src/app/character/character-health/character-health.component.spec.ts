@@ -11,13 +11,15 @@ describe('CharacterHealthComponent', () => {
       { key: 'head', label: 'Head', current: '', maximum: 4, armour: 0 },
       { key: 'chest', label: 'Chest', current: 0, maximum: 6, armour: 2 },
     ];
+    const injury = jasmine.createSpy('injury edit');
+    health.injuryChange.subscribe(injury);
     const listener = jasmine.createSpy('HP edit');
     health.hpChange.subscribe(listener);
     fixture.detectChanges();
 
     fixture.nativeElement.querySelector('.zone-head').click();
     fixture.detectChanges();
-    const hp = fixture.nativeElement.querySelector('input[aria-label="Current HP — Head"]');
+    const hp = fixture.nativeElement.querySelector('input[aria-label="Текущие ОЗ — Голова"]');
     expect(hp).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.zone-head').getAttribute('aria-pressed')).toBe('true');
     hp.value = '-2';
@@ -25,6 +27,15 @@ describe('CharacterHealthComponent', () => {
     expect(listener).not.toHaveBeenCalled();
     hp.dispatchEvent(new Event('blur'));
     expect(listener).toHaveBeenCalledOnceWith({ key: 'head', value: -2 });
+    expect(fixture.nativeElement.querySelector('[data-location="head"]').getAttribute('aria-pressed')).toBe('true');
+    fixture.nativeElement.querySelector('[data-location="chest"]').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.zone-chest').getAttribute('aria-pressed')).toBe('true');
+    fixture.nativeElement.querySelector('.mobile-body-toggle').click();
+    fixture.detectChanges();
+    expect(health.selectedKey).toBe('chest');
+    fixture.nativeElement.querySelector('.injury-conditions input').click();
+    expect(injury).toHaveBeenCalledOnceWith({ key: 'chest', injury: { conditions: ['impaling'] } });
   });
 
   it('uses the supplied location list when the humanoid layout is unavailable', () => {

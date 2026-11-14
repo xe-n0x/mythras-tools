@@ -60,7 +60,7 @@ export function wornArmourEnc(character: Character): number {
 
 export function armourPenalty(character: Character): number {
   return character.equipment.armorPenalty == null
-    ? Math.ceil(wornArmourEnc(character) / 5) : Number(character.equipment.armorPenalty);
+    ? Math.floor(wornArmourEnc(character) / 5) : Number(character.equipment.armorPenalty);
 }
 
 const grips: readonly WeaponGrip[] = ['main', 'off', 'both'];

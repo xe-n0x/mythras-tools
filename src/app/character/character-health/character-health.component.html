@@ -1,17 +1,18 @@
 <section class="health">
   <header class="health-heading">
     <h3>Здоровье</h3>
-    <span>Части тела</span>
+    <button *ngIf="humanoid" type="button" class="mobile-body-toggle" aria-controls="humanoid-body-map" [attr.aria-expanded]="showMobileBody"
+      (click)="showMobileBody = !showMobileBody">{{showMobileBody ? 'Скрыть схему тела' : 'Показать схему тела'}}</button>
   </header>
-  <div class="health-layout" [class.has-map]="humanoid" *ngIf="selected as active; else empty">
-    <div *ngIf="humanoid" class="body-map" role="group" aria-label="Части тела на схеме">
+  <div class="health-layout" [class.has-map]="humanoid" [class.show-mobile-body]="showMobileBody" *ngIf="selected as active; else empty">
+    <div *ngIf="humanoid" id="humanoid-body-map" class="body-map" role="group" aria-label="Части тела на схеме">
       <svg viewBox="0 0 300 440" aria-hidden="true" focusable="false">
         <ellipse class="figure-ground" cx="150" cy="424" rx="80" ry="8" />
         <g *ngFor="let region of anatomy">
           <g *ngIf="location(region.key) as part">
             <path class="body-region" [ngClass]="part.severity || 'unknown'"
               [class.is-selected]="part.key === active.key" [class.is-hovered]="part.key === hoveredKey"
-              [class.has-injury]="part.injury?.note || part.injury?.maximumHp != null"
+              [class.has-injury]="!!part.injury"
               [attr.d]="region.path" (click)="selectedKey = part.key" />
             <polyline class="callout-line" [attr.points]="region.line" />
           </g>
@@ -21,24 +22,29 @@
         <button *ngIf="location(region.key) as part" type="button" class="body-marker"
           [ngClass]="[part.severity || 'unknown', 'zone-' + part.key]"
           [style.left.%]="region.x" [style.top.%]="region.y"
-          [attr.aria-label]="ru(part.label) + ', ' + ru(woundLabels[part.severity || 'unknown']) + ', ОЗ ' + (part.current === '' ? 'не заданы' : part.current) + ' из ' + (part.maximum === '' ? 'неизвестно' : part.maximum) + (localEffectNames(part.key) ? ', эффекты: ' + localEffectNames(part.key) : '')"
+          [attr.aria-label]="ru(part.label) + ', ' + ru(woundLabels[part.severity || 'unknown']) + (conditionNames(part) ? ', ' + conditionNames(part) : '') + ', ОЗ ' + (part.current === '' ? 'не заданы' : part.current) + ' из ' + (part.maximum === '' ? 'неизвестно' : part.maximum) + (localEffectNames(part.key) ? ', эффекты: ' + localEffectNames(part.key) : '')"
           [attr.aria-pressed]="part.key === active.key"
-          [class.has-injury]="part.injury?.note || part.injury?.maximumHp != null"
+          [class.has-injury]="!!part.injury"
           (mouseenter)="hoveredKey = part.key" (mouseleave)="hoveredKey = ''"
           (focus)="hoveredKey = part.key" (blur)="hoveredKey = ''"
           (click)="selectedKey = part.key">
           <span>{{part.current === '' ? '–' : part.current}} / {{part.maximum === '' ? '–' : part.maximum}}</span>
+          <small class="injury-indicator" *ngIf="conditionNames(part) as names" [title]="names">Травма</small>
           <small class="local-effect-indicator" *ngIf="localEffectNames(part.key) as names" [title]="names">Эффекты</small>
         </button>
       </ng-container>
     </div>
     <div class="health-controls">
-      <div *ngIf="!humanoid" class="location-list" role="group" aria-label="Выбрать часть тела">
-        <button *ngFor="let part of locations; trackBy: trackLocation" type="button"
+      <div class="location-list" role="group" aria-label="Выбрать часть тела">
+        <button *ngFor="let part of locations; trackBy: trackLocation" type="button" [attr.data-location]="part.key"
           [class.is-selected]="part.key === active.key" [attr.aria-pressed]="part.key === active.key"
           (click)="selectedKey = part.key">
-          <span>{{ru(part.label)}}<small>{{ru(woundLabels[part.severity || 'unknown'])}}</small><small *ngIf="localEffectNames(part.key) as names">{{names}}</small></span>
-          <strong>{{part.current === '' ? '—' : part.current}} / {{part.maximum === '' ? '—' : part.maximum}}</strong>
+          <span><b>{{ru(part.label)}}</b> <small *ngIf="part.range" class="hit-range">{{part.range}}</small>
+            <small *ngIf="part.severity && part.severity !== 'healthy' && part.severity !== 'unknown'" class="wound-status" [ngClass]="part.severity">{{ru(woundLabels[part.severity])}}</small>
+            <small class="injury-indicator" *ngIf="conditionNames(part) as names">{{names}}</small>
+            <small *ngIf="localEffectNames(part.key) as names">{{names}}</small>
+          </span>
+          <span class="location-numbers"><strong>ОЗ {{part.current === '' ? '—' : part.current}} / {{part.maximum === '' ? '—' : part.maximum}}</strong><small>ОБ {{part.armour}}</small></span>
         </button>
       </div>
       <div class="location-editor">
@@ -54,11 +60,26 @@
         <app-committed-number [label]="'Текущие ОЗ — ' + ru(active.label)" [value]="active.current"
           [placeholder]="active.maximum === '' ? '—' : active.maximum.toString()" [maximum]="active.maximum"
           (committed)="edit(active, $event)"></app-committed-number>
+        <div class="hp-adjustment">
+          <label>Изменение ОЗ<input #amount type="number" inputmode="numeric" min="1" step="1" value="1" (input)="hpAmount = amount.valueAsNumber"></label>
+          <button type="button" [disabled]="!adjustmentAvailable || !validAdjustment" (click)="adjust(active, 'damage')">− ОЗ</button>
+          <button type="button" [disabled]="!adjustmentAvailable || !validAdjustment || active.maximum === '' || active.maximum <= 0 || +active.current >= active.maximum"
+            (click)="adjust(active, 'healing')">+ ОЗ</button>
+        </div>
+        <small *ngIf="!adjustmentAvailable">Сначала укажите текущие ОЗ.</small>
         <button type="button" class="restore-hp" [disabled]="active.maximum === '' || active.maximum <= 0 || active.current === active.maximum"
           (click)="restore(active)">Восстановить все ОЗ</button>
         <p class="recorded-injury" *ngIf="active.injury?.note as note">{{note}}</p>
         <details>
-          <summary>Записать стойкую травму</summary>
+          <summary>Записать травму</summary>
+          <fieldset class="injury-conditions">
+            <legend>Тип повреждения</legend>
+            <label *ngFor="let condition of injuryConditions">
+              <input #marked type="checkbox" [checked]="hasCondition(active, condition.key)"
+                (change)="recordCondition(active, condition.key, marked.checked)" />
+              {{condition.label}}
+            </label>
+          </fieldset>
           <label>Последствия по решению ведущего
             <textarea #note rows="2" [value]="active.injury?.note ?? ''" (change)="recordNote(active, note.value)"></textarea>
           </label>

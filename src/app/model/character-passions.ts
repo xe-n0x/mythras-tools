@@ -2,5 +2,5 @@ export class CharacterPassions {
     objectOfPassion : string;
     passion : string;
     modifier : string;
-    modifierNumber: number;
+    modifierNumber?: number;
 }

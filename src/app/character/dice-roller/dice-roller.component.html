@@ -24,24 +24,38 @@
     <button type="submit" class="roll-button">{{origin === 'manual' ? 'Записать бросок' : 'Бросить кубики'}}</button>
   </form>
 
-  <div class="dice-result" *ngIf="result as roll" [class.animated]="animate" [attr.data-degree]="roll.outcome?.degree" aria-live="polite">
-    <p class="roll-origin">{{roll.dice.origin === 'manual' ? 'Физические кубики · ручной ввод' : 'Виртуальные кубики'}} · {{roll.dice.expression}}</p>
-    <div class="dice-faces" aria-hidden="true">
-      <ng-container *ngIf="percentile as faces; else otherDice">
-        <span class="die die-tens"><small>Десятки</small>{{faces[0]}}0</span>
-        <span class="die die-units"><small>Единицы</small>{{faces[1]}}</span>
+  <ng-container *ngIf="result as roll">
+    <div class="dice-result" [class.animated]="animate" [attr.data-degree]="roll.outcome?.degree" aria-live="polite">
+      <p class="roll-target" *ngIf="roll.check as snapshot">Цель броска <strong>{{snapshot.target | number:'1.0-4'}}%</strong> · {{ru(snapshot.grade)}}</p>
+      <p class="roll-origin">{{roll.dice.origin === 'manual' ? 'Физические кубики · ручной ввод' : 'Виртуальные кубики'}} · {{roll.dice.expression}}</p>
+      <div class="dice-faces" *ngFor="let freshRoll of [roll]" aria-hidden="true">
+        <ng-container *ngIf="percentile as faces; else otherDice">
+          <span class="die die-tens"><small>Десятки</small>{{faces[0]}}0</span>
+          <span class="die die-units"><small>Единицы</small>{{faces[1]}}</span>
+        </ng-container>
+        <ng-template #otherDice>
+          <span class="die" *ngFor="let die of freshRoll.dice.dice | slice:0:6"><small>d{{die.sides}}</small>{{die.sign < 0 ? '−' : ''}}{{die.value}}</span>
+        </ng-template>
+      </div>
+      <strong class="roll-total">{{percentile ?? roll.dice.total}}</strong>
+      <ng-container *ngIf="roll.outcome as outcome; else sum">
+        <strong class="roll-degree">{{ru(outcome.degree)}}</strong>
+        <p>{{ru(outcome.explanation)}}</p>
       </ng-container>
-      <ng-template #otherDice>
-        <span class="die" *ngFor="let die of roll.dice.dice | slice:0:6"><small>d{{die.sides}}</small>{{die.sign < 0 ? '−' : ''}}{{die.value}}</span>
-      </ng-template>
+      <ng-template #sum><p class="roll-breakdown">{{breakdown}} = {{roll.dice.total}}</p></ng-template>
     </div>
-    <strong class="roll-total">{{percentile ?? roll.dice.total}}</strong>
-    <ng-container *ngIf="roll.outcome as outcome; else sum">
-      <strong class="roll-degree">{{ru(outcome.degree)}}</strong>
-      <p>{{ru(outcome.explanation)}}</p>
-      <p *ngIf="roll.check as snapshot">Цель {{snapshot.target | number:'1.0-4'}}% · {{ru(snapshot.grade)}}</p>
-    </ng-container>
-    <ng-template #sum><p class="roll-breakdown">{{breakdown}} = {{roll.dice.total}}</p></ng-template>
-    <button type="button" class="new-roll" (click)="newRoll()">Новый бросок</button>
-  </div>
+    <form *ngIf="roll.dice.origin === 'manual'" class="dice-form" (ngSubmit)="repeatRoll()">
+      <label>{{roll.check ? 'Новый результат d100' : 'Новые значения кубиков'}}
+        <input name="repeatManual" [(ngModel)]="repeatManual" [attr.inputmode]="roll.check ? 'numeric' : 'text'"
+          [attr.maxlength]="roll.check ? 3 : 256" [placeholder]="roll.check ? '01–99 или 00' : 'Например, 4, 6'" autocomplete="off" />
+      </label>
+      <button type="submit" class="roll-button">{{roll.check ? 'Записать с прежней целью' : 'Записать повторный бросок'}}</button>
+    </form>
+    <div class="result-actions">
+      <button *ngIf="roll.dice.origin === 'virtual'" type="button" class="roll-button"
+        (click)="repeatRoll()">{{roll.check ? 'Перебросить с прежней целью' : 'Перебросить'}}</button>
+      <button type="button" class="new-roll" (click)="newRoll()">Новый бросок</button>
+    </div>
+    <p class="dice-error" *ngIf="error" role="alert">{{ru(error)}}</p>
+  </ng-container>
 </section>

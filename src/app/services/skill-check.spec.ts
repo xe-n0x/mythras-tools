@@ -22,11 +22,13 @@ describe('Mythras Difficulty Grades', () => {
     });
   }
 
-  it('keeps the fractional target and only uses the hardest applicable grade', () => {
+  it('rounds the final target down (Tennla) and only uses the hardest applicable grade', () => {
     const grade = hardestGrade('Hard', ['Hard', 'Formidable']);
     expect(grade).toBe('Formidable');
-    expect(skillCheckTarget(65, grade, 'standard')).toBe(32.5);
-    expect(skillCheckTarget(65, 'Hard', 'standard')).toBeCloseTo(130 / 3);
+    expect(skillCheckTarget(65, grade, 'standard')).toBe(32);
+    expect(skillCheckTarget(65, 'Hard', 'standard')).toBe(43);
+    expect(skillCheckTarget(53, 'Hard', 'standard')).toBe(35);
+    expect(skillCheckTarget(-1.2, 'Standard', 'standard')).toBe(-2);
     expect(hardestGrade('Herculean', ['Hard'])).toBe('Herculean');
     expect(hardestGrade('Automatic', [])).toBe('Automatic');
     expect(hardestGrade('Very Easy', ['Hopeless'])).toBe('Hopeless');
@@ -38,9 +40,10 @@ describe('Simple percentile checks', () => {
     skill: 'Athletics', target, original, effective, grade:'Standard', selectedGrade:'Standard', system:'standard', modifiers:[],
   });
 
-  it('uses the modified and rounded-up critical threshold and honours the 96–00 boundary', () => {
-    const check = context(42.5);
-    expect(resolveCheckRoll(check, 5)?.degree).toBe('Critical Success');
+  it('uses the modified and rounded-down critical threshold and honours the 96–00 boundary', () => {
+    const check = context(42);
+    expect(resolveCheckRoll(check, 4)?.degree).toBe('Critical Success');
+    expect(resolveCheckRoll(check, 5)?.degree).toBe('Success');
     expect(resolveCheckRoll(check, 6)?.degree).toBe('Success');
     expect(resolveCheckRoll(check, 42)?.degree).toBe('Success');
     expect(resolveCheckRoll(check, 43)?.degree).toBe('Failure');
@@ -52,7 +55,7 @@ describe('Simple percentile checks', () => {
 
   it('preserves guaranteed successes at low scores and fumbles over 100%', () => {
     expect(resolveCheckRoll(context(-20), 1)?.degree).toBe('Success');
-    expect(resolveCheckRoll(context(1), 1)?.degree).toBe('Critical Success');
+    expect(resolveCheckRoll(context(1), 1)?.degree).toBe('Success');
     expect(resolveCheckRoll(context(1), 5)?.degree).toBe('Success');
     expect(resolveCheckRoll(context(1), 6)?.degree).toBe('Failure');
     expect(resolveCheckRoll(context(100), 99)?.degree).toBe('Fumble');

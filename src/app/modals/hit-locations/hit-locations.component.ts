@@ -1,5 +1,6 @@
 import { ModalInnerContent } from './../../model/modal-inner-content';
 import { TableComponent } from 'src/app/table-component/table.component';
+import { HIT_LOCATIONS } from 'src/app/services/hit-points';
 import { Component } from '@angular/core';
 
 @Component({
@@ -15,14 +16,6 @@ export class HitLocationsComponent extends TableComponent implements ModalInnerC
     return "Mythras Core Rules 109";
   }
   override getTable(): any[] {
-    return [
-      {"1d20":"1-3", hitLocation:"Right Leg"},
-      {"1d20":"4-6", hitLocation:"Left Leg"},
-      {"1d20":"7-9", hitLocation:"Absoment"},
-      {"1d20":"10-12", hitLocation:"Chest"},
-      {"1d20":"13-15", hitLocation:"Right Leg"},
-      {"1d20":"16-18", hitLocation:"Left Arm"},
-      {"1d20":"19-20", hitLocation:"Right Head"}
-    ]
+    return HIT_LOCATIONS.map(({ range, label }) => ({ '1d20': range, 'Hit Location': label }));
   }
 }

@@ -13,14 +13,14 @@ describe('Character loadout', () => {
       equipment: { chest: { name: 'Mail', ap: 6, enc: 5 }, head: { ap: 2, enc: 1 } },
     });
     expect(wornArmourEnc(hero)).toBe(6);
-    expect(armourPenalty(hero)).toBe(2);
+    expect(armourPenalty(hero)).toBe(1);
     expect(getTotalFromItems(hero, 'enc', true)).toBe(3);
 
     expect(changeArmour(hero, 'chest', null)).toBeTrue();
     expect(getArmourAt(hero.equipment, 'chest')?.ap).toBeUndefined();
     expect(getArmourAt(hero.equipment, 'head')?.ap).toBe(2);
-    expect(getTotalFromItems(hero, 'enc', true)).toBe(5.5);
-    expect(armourPenalty(hero)).toBe(1);
+    expect(getTotalFromItems(hero, 'enc', true)).toBe(5);
+    expect(armourPenalty(hero)).toBe(0);
     expect(hero.currentHitPoints?.['chest']).toBe(-2);
 
     const restored = parseCharacterFile(JSON.stringify(hero))[0];
@@ -39,7 +39,7 @@ describe('Character loadout', () => {
     expect(spareArmour(hero.equipment)[0].piece.name).toBe('Mail');
     expect(armourPenalty(hero)).toBe(3);
     delete (hero.equipment as Partial<typeof hero.equipment>).armorPenalty;
-    expect(armourPenalty(hero)).toBe(1);
+    expect(armourPenalty(hero)).toBe(0);
   });
 
   it('validates offensive pairs, allows a shield, and frees both hands for a two-handed weapon', () => {

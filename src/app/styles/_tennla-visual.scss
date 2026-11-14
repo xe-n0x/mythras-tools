@@ -23,6 +23,7 @@
   }
 
   .app-shell.tennla-shell {
+    --sheet-desktop-width: min(90%, 2000px);
     background:
       radial-gradient(ellipse 48% 27% at 5% 3%, #e1d5bc80 0%, transparent 78%),
       radial-gradient(ellipse 36% 32% at 98% 32%, #b4c9c72e 0%, transparent 90%),
@@ -32,9 +33,62 @@
   @media screen {
     .tennla-shell > .app-container {
       width: 100%;
-      max-width: 2100px;
+      max-width: none;
       padding-inline: clamp(12px, 1.5vw, 32px);
     }
+  }
+
+  .tennla-margins { display: none; }
+
+  @media screen and (min-width: 1280px) {
+    .tennla-shell > .app-container {
+      width: var(--sheet-desktop-width);
+      padding-inline: 0;
+    }
+
+    .tennla-margins {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--sheet-desktop-width) minmax(0, 1fr);
+      align-items: start;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+    }
+    .tennla-margin {
+      display: grid;
+      justify-items: center;
+      gap: clamp(16px, 2vw, 32px);
+      min-width: 0;
+    }
+    .tennla-margin-west {
+      grid-column: 1;
+      margin-top: clamp(220px, 18vw, 350px);
+      color: #725b39;
+    }
+    .tennla-margin-east {
+      grid-column: 3;
+      margin-top: clamp(140px, 13vw, 270px);
+      color: var(--sheet-accent);
+    }
+    .tennla-margin span {
+      writing-mode: vertical-rl;
+      font: 600 12px/1 Georgia, serif;
+      letter-spacing: .2em;
+      opacity: .1;
+    }
+    .tennla-margin svg {
+      display: block;
+      width: min(80%, 60px);
+      stroke-width: 1.4;
+    }
+    .tennla-margin-east svg { width: min(84%, 148px); }
+    .tennla-fresco { display: block; width: min(90%, 188px); height: auto; }
+    .tennla-borderwork { opacity: .09; }
+    .tennla-emblem { opacity: .14; }
+    .tennla-margin > svg { order: 1; }
   }
   .viewer-shell { gap: clamp(12px, 1.1vw, 18px); font-family: Roboto, 'Segoe UI', sans-serif; }
 
@@ -42,7 +96,6 @@
   .viewer-header {
     position: relative;
     isolation: isolate;
-    overflow: hidden;
     align-items: center;
     min-height: 124px;
     padding: 18px clamp(18px, 2.2vw, 38px);
@@ -52,6 +105,7 @@
     background: linear-gradient(112deg, #fffefa 0%, #f3ebdc 48%, #dce8e5 100%);
     box-shadow: 0 10px 30px #354d4610;
   }
+  .viewer-header:has(.sheet-tools[open]) { z-index: 11; }
   .viewer-header::after {
     content: '';
     position: absolute;
@@ -61,14 +115,20 @@
     height: 3px;
     background: linear-gradient(90deg, var(--sheet-bronze), #b89e6d 28%, transparent 66%);
     opacity: .7;
+    pointer-events: none;
   }
   .viewer-title-block, .viewer-actions { position: relative; z-index: 2; }
-  .viewer-title-block { display: grid; gap: 4px; }
-  .tennla-brand { gap: 16px; align-items: center; }
+  .viewer-title-block {
+    --tennla-seal-size: clamp(52px, 4.5vw, 70px);
+    --tennla-brand-gap: 16px;
+    display: grid;
+    gap: 4px;
+  }
+  .tennla-brand { gap: var(--tennla-brand-gap); align-items: center; }
   .tennla-brand > div { display: grid; gap: 3px; }
   .tennla-seal {
     position: relative;
-    flex-basis: clamp(52px, 4.5vw, 70px);
+    flex-basis: var(--tennla-seal-size);
     background:
       radial-gradient(circle, #f9efd9 0 19%, #a67a43 20% 25%, transparent 26% 53%, #a67a43 54% 56%, transparent 57%),
       repeating-conic-gradient(from 2deg, #a67a43 0deg 4deg, transparent 5deg 24deg),
@@ -96,19 +156,26 @@
     letter-spacing: .14em;
     text-transform: uppercase;
   }
-  .character-library-link { font-size: 12px; color: #4c686c; }
+  .character-library-link {
+    justify-self: start;
+    justify-content: flex-start;
+    margin-inline-start: calc(var(--tennla-seal-size) + var(--tennla-brand-gap));
+    font-size: 12px;
+    color: #4c686c;
+  }
   .tennla-header-engraving {
     position: absolute;
     z-index: 0;
-    right: 16%;
-    top: -25px;
-    width: clamp(270px, 36vw, 610px);
-    height: 165px;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: inherit;
     color: #8b855f;
     opacity: .19;
     pointer-events: none;
   }
-  .tennla-header-engraving svg { display: block; width: 100%; height: 100%; }
+  .tennla-header-engraving svg { display: block; width: min(34%, 520px); height: auto; }
   .viewer-actions { gap: 8px; align-items: center; }
   .viewer-header .home-link, .sheet-tools summary {
     min-height: 36px;
@@ -126,45 +193,38 @@
   .viewer-header .home-link:first-child { border-color: #295562; color: #fff; background: #295562; }
   .viewer-header .home-link:first-child:hover { background: #1f4550; }
 
-  // Section tabs read as navigation, not three competing cards.
+  // The active underline shares the navigation baseline.
   .section-nav {
     top: 0;
-    display: flex;
-    gap: 2px;
     padding: 0 12px;
-    border: 0;
-    border-bottom: 1px solid #bac6c2;
+    gap: 2px;
+    border: none;
     border-radius: 0;
     background: #f6f3ebf5;
-    box-shadow: none;
+    box-shadow: inset 0 -1px #bac6c2;
     backdrop-filter: blur(10px);
   }
   .section-nav button {
     position: relative;
-    flex: 1 1 0;
-    border-radius: 0;
-    border: 0;
+    border: none;
+    border-radius: 5px 5px 0 0;
     padding: 12px 12px 13px;
     background: none;
     color: #526c6a;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: .035em;
+    font-family: inherit;
+    cursor: pointer;
+    overflow-wrap: anywhere;
     transition: color .15s, background .15s;
   }
   .section-nav button.is-active {
     color: #234852;
     background: #e4ece6a8;
+    box-shadow: inset 0 -3px var(--sheet-bronze);
   }
-  .section-nav button.is-active::after {
-    content: '';
-    position: absolute;
-    height: 3px;
-    left: 12px;
-    right: 12px;
-    bottom: 0;
-    background: var(--sheet-bronze);
-  }
+  .section-nav button:focus-visible { outline-offset: -5px; }
   .save-status { margin: -4px 2px 0; font-size: 11px; }
 
   .character-workspace {
@@ -188,7 +248,7 @@
     scrollbar-color: #9bb0a787 transparent;
     scrollbar-width: thin;
   }
-  .session-skills::before {
+  .session-skills > header::before {
     content: '✦';
     position: absolute;
     right: 13px;
@@ -200,6 +260,7 @@
     pointer-events: none;
   }
   .session-skills > header {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     margin: -16px -14px 13px;
@@ -209,7 +270,7 @@
     border-radius: 0;
     background: transparent;
   }
-  .session-skills > header h2 {
+  .character-workspace .session-skills > header h2 {
     padding: 0;
     border: 0;
     color: #fff9eb;
@@ -231,7 +292,7 @@
     background: #fffefa;
     color: #243337;
   }
-  .session-skills h3 {
+  .character-workspace .session-skills section h3 {
     padding: 11px 0 6px;
     margin: 12px 0 1px;
     background: transparent;
@@ -241,6 +302,7 @@
     font: 700 10px/1.45 Roboto, sans-serif;
     text-transform: uppercase;
     letter-spacing: .15em;
+    overflow-wrap: anywhere;
   }
   .session-skill-list button {
     min-height: 35px;
@@ -260,12 +322,14 @@
   }
   .session-skill-list span { overflow-wrap: break-word; }
   .session-skills .skill-empty {
-    background: #ffffff12;
+    box-sizing: border-box;
+    margin: 10px 0 0;
+    background: #182f3960;
     color: #ecf3ed;
-    padding: 10px 8px;
-    overflow-wrap: normal;
-    word-break: normal;
-    hyphens: auto;
+    padding: 10px;
+    border: 1px solid #bcd6cf44;
+    border-radius: 4px;
+    line-height: 1.45;
   }
 
   // Character folio: portrait, identity and derived characteristics are one unit.
@@ -469,9 +533,6 @@
   .check-target { border-left: 4px solid var(--sheet-bronze); background: #e7f0eb; }
   .skill-dialog .check-totals { padding: 12px; border-radius: 5px; background: #f5f0e5; }
 
-  .tennla-edge { opacity: .15; color: #5d674d; }
-  .tennla-edge-sea { color: #476b71; }
-
   @media (max-width: 1200px) {
     .character-play-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 1fr); }
     .hero-facts { flex-basis: 200px; }
@@ -484,15 +545,20 @@
     .character-workspace { grid-template-columns: minmax(0, 1fr); }
     .session-skills { position: static; max-height: none; }
     .section-nav { top: 0; }
-    .tennla-header-engraving { right: 0; width: 45%; opacity: .08; }
+    .tennla-header-engraving { display: none; }
   }
   @media (max-width: 680px) {
-    .viewer-header { min-height: 0; padding: 14px 14px 16px; }
-    .tennla-header-engraving { width: 60%; height: 100px; opacity: .09; }
+    .viewer-header { min-height: 0; padding: 8px 10px 10px; gap: 6px; }
+    .tennla-overline { display: none; }
+    .viewer-header .home-link, .sheet-tools summary { padding-block: 5px; }
     .viewer-actions { margin-inline: 0; justify-content: flex-start; }
-    .tennla-brand { gap: 10px; }
-    .tennla-seal { flex-basis: 41px; }
-    .tennla-mark { font-size: clamp(2.1rem, 8vw, 2.7rem); }
+    .viewer-title-block {
+      --tennla-seal-size: 41px;
+      --tennla-brand-gap: 10px;
+    }
+    .tennla-mark { font-size: clamp(1.45rem, 6vw, 2.25rem); }
+    .character-library-link { margin-block-start: 2px; }
+    .viewer-title-block h1 { margin-block: 2px 0; }
     .section-nav { padding-inline: 2px; }
     .section-nav button { padding-inline: 6px; font-size: 11px; }
     .hero-identity { padding: 12px; }
@@ -504,7 +570,6 @@
     .hero-panel .characteristic-field .stat-value,
     .hero-panel .characteristic-field .modified-stat { font-size: 19px; }
     .resource-values { padding-inline: 8px; }
-    .session-skills > header h2 { font-size: 22px; }
     .choice-dialog, .skill-dialog { padding: 14px; }
   }
   @media (max-width: 380px) {
