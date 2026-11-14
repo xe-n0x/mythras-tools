@@ -379,18 +379,21 @@
   .creation-sidebar { position: static; }
 }
 
-/* Tennla editor: keep every step readable on the dark sidebar. */
-.creation-sidebar .step-list-item:not(.active) {
+/* Tennla editor contrast: set text on the actual labels and step numbers. */
+.creation-sidebar .step-list-item:not(.active),
+.creation-sidebar .step-list-item:not(.active) .step-name {
   color: #f5f4e9;
-}
-.creation-sidebar .step-list-item.active {
-  color: #193e46;
-}
-.creation-sidebar .step-list-item .step-name {
-  color: inherit;
   opacity: 1;
 }
 .creation-sidebar .step-list-item:not(.active) .step-index {
   color: #f5e6cb;
   border-color: #e2d4b5;
+}
+.creation-sidebar .step-list-item.active,
+.creation-sidebar .step-list-item.active .step-name {
+  color: #193e46;
+  opacity: 1;
+}
+.creation-sidebar .step-list-item.active .step-index {
+  color: #fffefa;
 }

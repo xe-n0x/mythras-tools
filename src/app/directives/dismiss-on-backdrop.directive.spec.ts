@@ -11,23 +11,37 @@ describe('DismissOnBackdropDirective', () => {
     spyOn(dialog, 'getBoundingClientRect').and.returnValue(new DOMRect(100, 100, 200, 200));
     spyOn(dialog, 'close');
     directive = new DismissOnBackdropDirective(new ElementRef(dialog));
-    dialog.addEventListener('click', event => directive.onClick(event));
   });
 
-  it('closes when the backdrop is clicked', () => {
-    dialog.dispatchEvent(new MouseEvent('click', { clientX: 50, clientY: 50 }));
+  it('closes on a pointer press outside the dialog rectangle', () => {
+    directive.onPointerDown({ clientX: 50, clientY: 50 } as PointerEvent);
     expect(dialog.close).toHaveBeenCalled();
   });
 
-  it('does not close when the dialog padding is clicked', () => {
-    dialog.dispatchEvent(new MouseEvent('click', { clientX: 150, clientY: 150 }));
+  it('closes on a touch outside the dialog rectangle', () => {
+    const touch = { clientX: 350, clientY: 150 } as Touch;
+    directive.onTouchStart({ changedTouches: [touch], touches: [touch] } as unknown as TouchEvent);
+    expect(dialog.close).toHaveBeenCalled();
+  });
+
+  it('does not close when the pointer is inside the dialog rectangle', () => {
+    directive.onPointerDown({ clientX: 150, clientY: 150 } as PointerEvent);
     expect(dialog.close).not.toHaveBeenCalled();
   });
 
-  it('does not close when an element inside the dialog is clicked', () => {
-    const button = document.createElement('button');
-    dialog.appendChild(button);
-    button.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 50, clientY: 50 }));
+  it('supports a real click outside the dialog as a fallback', () => {
+    directive.onDocumentClick({ clientX: 350, clientY: 150, detail: 1 } as MouseEvent);
+    expect(dialog.close).toHaveBeenCalled();
+  });
+
+  it('does not mistake keyboard activation for a backdrop click', () => {
+    directive.onDocumentClick({ clientX: 0, clientY: 0, detail: 0 } as MouseEvent);
+    expect(dialog.close).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when the dialog is already closed', () => {
+    dialog.removeAttribute('open');
+    directive.onPointerDown({ clientX: 50, clientY: 50 } as PointerEvent);
     expect(dialog.close).not.toHaveBeenCalled();
   });
 });
